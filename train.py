@@ -48,10 +48,12 @@ def checkpoint(model, optimiser, epoch):
 
 #     return wrapper
 
-def validate(model, val_loader, batch_idx, loss_fn, writer):
+def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     print('validating')
     val_loss = 0
     for (x, y) in val_loader:
+        x = x.to(device)
+        y = y.to(device)
         pred = model(x)
         loss = loss_fn(pred, y)
         val_loss += loss.item()
@@ -87,7 +89,7 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
             writer.add_scalar(f'{writer.logdir}/Loss/Train', loss.item(), batch_idx)
             batch_idx += 1
             print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
-        validate(model, val_loader, batch_idx, loss_fn, writer)
+        validate(model, device, val_loader, batch_idx, loss_fn, writer)
 
         # checkpoint(model, optimiser, epoch)
     return model, writer

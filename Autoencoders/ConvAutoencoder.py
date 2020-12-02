@@ -11,6 +11,7 @@ from train import train
 from torch.utils.data import DataLoader
 from NN import NN
 from TransposeCNN import TransposeCNN
+from ae_utils import visualise_reconstruction
 
 batch_size = 16
 
@@ -38,8 +39,6 @@ class ConvAutoencoder(torch.nn.Module):
         z = self.encode(x)
         h = self.decode(z)
         return h
-
-layers = [784, 256, 64]#, 64, 8, 2]
 
 class AEDataset(torch.utils.data.Dataset):
     def __init__(self, dataset, transform=None):
@@ -87,6 +86,7 @@ for idx in range(start_idx, stop_idx):
     )
     for batch in train_loader:
         x, _ = batch
+        model = model.to('cpu')
         reconstructions = model(x)
         x = x.view(x.shape[0], 1, 28, 28)
         reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
