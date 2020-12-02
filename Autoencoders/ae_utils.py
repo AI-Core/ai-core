@@ -1,4 +1,4 @@
-def visualise_reconstruction(writer, originals, reconstructions):
+def visualise_reconstruction(writer, originals, reconstructions, label):
 
-    writer.add_images('originals', originals)
-    writer.add_images('reconstructions', reconstructions)
+    writer.add_images(f'originals/{label}', originals)
+    writer.add_images(f'reconstructions/{label}', reconstructions)

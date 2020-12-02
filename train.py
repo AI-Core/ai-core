@@ -91,7 +91,7 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
             print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
         validate(model, device, val_loader, batch_idx, loss_fn, writer)
         if on_epoch_end:
-            on_epoch_end(model, writer)
+            on_epoch_end(model, writer, device, epoch)
 
         # checkpoint(model, optimiser, epoch)
     return model, writer

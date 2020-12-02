@@ -58,14 +58,15 @@ train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_
 val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size)
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
-def on_epoch_end(model, writer):
+def on_epoch_end(model, writer, device, epoch):
     for batch in train_loader:
         x, _ = batch
-        model = model.to('cpu')
+        x = x.to(device)
+        model = model#.to('cpu')
         reconstructions = model(x)
         x = x.view(x.shape[0], 1, 28, 28)
         reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
-        visualise_reconstruction(writer, x, reconstructions)
+        visualise_reconstruction(writer, x, reconstructions, f'epoch-{epoch}')
         break
 
 
@@ -87,12 +88,12 @@ for idx in range(start_idx, stop_idx):
     print(f'training model {idx}')
     print(model.encoder.layers)
     model, writer = train(
-        model=model, 
+        model=model,
         logdir='ConvAutoencoder',
         train_loader=train_loader,
         val_loader=val_loader,
         test_loader=test_loader,
         loss_fn=F.mse_loss,
-        epochs=1,
+        epochs=10,
         on_epoch_end=on_epoch_end 
     )
