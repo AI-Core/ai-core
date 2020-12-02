@@ -62,7 +62,7 @@ def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     print(batch_idx)
     print(batch_idx, val_loss)
 
-def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1):
+def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None):
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
@@ -90,6 +90,8 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
             batch_idx += 1
             print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
         validate(model, device, val_loader, batch_idx, loss_fn, writer)
+        if on_epoch_end:
+            on_epoch_end(model, writer)
 
         # checkpoint(model, optimiser, epoch)
     return model, writer

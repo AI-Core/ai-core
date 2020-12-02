@@ -58,6 +58,17 @@ train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_
 val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size)
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
+def on_epoch_end(model, writer):
+    for batch in train_loader:
+        x, _ = batch
+        model = model.to('cpu')
+        reconstructions = model(x)
+        x = x.view(x.shape[0], 1, 28, 28)
+        reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
+        visualise_reconstruction(writer, x, reconstructions)
+        break
+
+
 start_idx = 3
 stop_idx = 9
 for idx in range(start_idx, stop_idx):
@@ -82,13 +93,6 @@ for idx in range(start_idx, stop_idx):
         val_loader=val_loader,
         test_loader=test_loader,
         loss_fn=F.mse_loss,
-        epochs=10
+        epochs=1,
+        on_epoch_end=on_epoch_end 
     )
-    for batch in train_loader:
-        x, _ = batch
-        model = model.to('cpu')
-        reconstructions = model(x)
-        x = x.view(x.shape[0], 1, 28, 28)
-        reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
-        visualise_reconstruction(writer, x, reconstructions)
-        break
