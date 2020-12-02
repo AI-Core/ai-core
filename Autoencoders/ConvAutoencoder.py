@@ -59,7 +59,7 @@ val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
 def on_epoch_end(model, writer, device, epoch):
-    # model.eval()
+    model.eval()
     for batch in train_loader:
         x, _ = batch
         x = x.to(device)

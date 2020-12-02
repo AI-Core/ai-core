@@ -1,6 +1,6 @@
 import torch
 class CNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, dropout=0.8):
+    def __init__(self, channels, linear_layers, dropout=0.5):
         super().__init__()
         l = []
 
