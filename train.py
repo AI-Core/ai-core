@@ -49,6 +49,7 @@ def checkpoint(model, optimiser, epoch):
 #     return wrapper
 
 def validate(model, val_loader, batch_idx, loss_fn, writer):
+    print('validating')
     val_loss = 0
     for (x, y) in val_loader:
         pred = model(x)
@@ -56,27 +57,30 @@ def validate(model, val_loader, batch_idx, loss_fn, writer):
         val_loss += loss.item()
     val_loss /= len(val_loader)
     writer.add_scalar(f'{writer.logdir}/Loss/Validation', val_loss, batch_idx)
+    print(batch_idx)
+    print(batch_idx, val_loss)
 
 def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1):
-    # def wrapper():
-        writer = SummaryWriter(log_dir=f'runs/{logdir}-{time()}')
-        writer.logdir = logdir
-        optimiser = torch.optim.SGD(model.parameters(), lr=0.01)
-        batch_idx = 0
-        for epoch in range(epochs):
-            for batch in train_loader:
-                x, y = batch
-                # loss = batch_loss(model, batch)
-                pred = model(x)
-                # print(pred.shape)
-                # print(y.shape)
-                loss = loss_fn(pred, y)
-                loss.backward()
-                optimiser.step()
-                optimiser.zero_grad()
-                writer.add_scalar(f'{writer.logdir}/Loss/Train', loss.item(), batch_idx)
-                batch_idx += 1
-                print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
-            validate(model, val_loader, batch_idx, loss_fn, writer)
-            checkpoint(model, optimiser, epoch)
-    # return wrapper
+    writer = SummaryWriter(log_dir=f'runs/{logdir}-{time()}')
+    writer.logdir = logdir
+    optimiser = torch.optim.SGD(model.parameters(), lr=0.01)
+    batch_idx = 0
+    # validate(model, val_loader, batch_idx, loss_fn, writer)
+    for epoch in range(epochs):
+        for batch in train_loader:
+            x, y = batch
+            # loss = batch_loss(model, batch)
+            pred = model(x)
+            # print(pred.shape)
+            # print(y.shape)
+            loss = loss_fn(pred, y)
+            loss.backward()
+            optimiser.step()
+            optimiser.zero_grad()
+            writer.add_scalar(f'{writer.logdir}/Loss/Train', loss.item(), batch_idx)
+            batch_idx += 1
+            print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
+        validate(model, val_loader, batch_idx, loss_fn, writer)
+
+        # checkpoint(model, optimiser, epoch)
+    return model, writer
