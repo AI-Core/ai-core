@@ -59,6 +59,7 @@ val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
 def on_epoch_end(model, writer, device, epoch):
+    # model.eval()
     for batch in train_loader:
         x, _ = batch
         x = x.to(device)
@@ -68,32 +69,34 @@ def on_epoch_end(model, writer, device, epoch):
         reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
         visualise_reconstruction(writer, x, reconstructions, f'epoch-{epoch}')
         break
+    model.train()
 
 
-start_idx = 3
-stop_idx = 9
-for idx in range(start_idx, stop_idx):
-    channels = [
-        1, # init channels`
-        *[2**idx for idx in range(start_idx, idx+2)]
-    ]
-    linear_layers = [576, 128]
-    print('channels:', channels)
-    model = ConvAutoencoder(
-        encoder_channels=channels,
-        encoder_linear_layers=linear_layers,
-        decoder_channels=channels[::-1],
-        decoder_linear_layers=linear_layers[::-1]
-    )
-    print(f'training model {idx}')
-    print(model.encoder.layers)
-    model, writer = train(
-        model=model,
-        logdir='ConvAutoencoder',
-        train_loader=train_loader,
-        val_loader=val_loader,
-        test_loader=test_loader,
-        loss_fn=F.mse_loss,
-        epochs=10,
-        on_epoch_end=on_epoch_end 
-    )
+if __name__ == '__main__':
+    start_idx = 3
+    stop_idx = 9
+    for idx in range(start_idx, stop_idx):
+        channels = [
+            1, # init channels`
+            *[2**idx for idx in range(start_idx, idx+2)]
+        ]
+        linear_layers = [576, 128]
+        print('channels:', channels)
+        model = ConvAutoencoder(
+            encoder_channels=channels,
+            encoder_linear_layers=linear_layers,
+            decoder_channels=channels[::-1],
+            decoder_linear_layers=linear_layers[::-1]
+        )
+        print(f'training model {idx}')
+        print(model.encoder.layers)
+        model, writer = train(
+            model=model,
+            logdir='ConvAutoencoder',
+            train_loader=train_loader,
+            val_loader=val_loader,
+            test_loader=test_loader,
+            loss_fn=F.mse_loss,
+            epochs=10,
+            on_epoch_end=on_epoch_end 
+        )

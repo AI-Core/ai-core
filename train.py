@@ -49,6 +49,7 @@ def checkpoint(model, optimiser, epoch):
 #     return wrapper
 
 def validate(model, device, val_loader, batch_idx, loss_fn, writer):
+    model.eval()
     print('validating')
     val_loss = 0
     for (x, y) in val_loader:
@@ -61,9 +62,11 @@ def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     writer.add_scalar(f'{writer.logdir}/Loss/Validation', val_loss, batch_idx)
     print(batch_idx)
     print(batch_idx, val_loss)
+    model.train()
 
 def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None):
-
+    model.train()
+    
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     device = torch.device(device)
     model = model.to(device)
