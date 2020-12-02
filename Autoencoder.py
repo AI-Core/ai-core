@@ -85,10 +85,10 @@ def visualise_reconstruction(writer, originals, reconstructions):
     writer.add_images('originals', originals)
     writer.add_images('reconstructions', reconstructions)
 
-for idx in range(9):
+for idx in range(1, 9):
     layers = [
         784,
-        *[2**(9-idx) for idx in range(9)]
+        *[2**(9-idx) for idx in range(idx)]
     ]
     print(layers)
     model = FlatAE(

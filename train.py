@@ -61,6 +61,11 @@ def validate(model, val_loader, batch_idx, loss_fn, writer):
     print(batch_idx, val_loss)
 
 def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1):
+
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    device = torch.device(device)
+    model = model.to(device)
+
     writer = SummaryWriter(log_dir=f'runs/{logdir}-{time()}')
     writer.logdir = logdir
     optimiser = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -69,6 +74,8 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
     for epoch in range(epochs):
         for batch in train_loader:
             x, y = batch
+            x = x.to(device)
+            y = y.to(device)
             # loss = batch_loss(model, batch)
             pred = model(x)
             # print(pred.shape)
