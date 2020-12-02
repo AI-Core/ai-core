@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from NN import NN
 from TransposeCNN import TransposeCNN
 from ae_utils import visualise_reconstruction
+from tuning.tuner import tuner
 
 batch_size = 16
 
@@ -72,7 +73,8 @@ def on_epoch_end(model, writer, device, epoch):
     model.train()
 
 
-if __name__ == '__main__':
+def get_channels():
+    channel_options = []
     start_idx = 3
     stop_idx = 9
     for idx in range(start_idx, stop_idx):
@@ -80,6 +82,13 @@ if __name__ == '__main__':
             1, # init channels`
             *[2**idx for idx in range(start_idx, idx+2)]
         ]
+        channel_options.append(channels)
+    return channel_options
+
+def train_tune(config):
+
+        channels = config['channels']
+   
         linear_layers = [576, 128]
         print('channels:', channels)
         model = ConvAutoencoder(
@@ -88,8 +97,32 @@ if __name__ == '__main__':
             decoder_channels=channels[::-1],
             decoder_linear_layers=linear_layers[::-1]
         )
-        print(f'training model {idx}')
-        print(model.encoder.layers)
+        # print(f'training model {idx}')
+        # print(model.encoder.layers)
+
+        # config = {
+        #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
+        #     # "n_layers": tune.grid_search(list(range(1, 10))),
+        #     "batch_size": tune.choice([2, 4, 8, 16])
+        # }
+        
+        # config = {
+        #     'model': model,
+        #     'logdir': 'ConvAutoencoder',
+        #     'train_loader': train_loader,
+        #     'val_loader': val_loader,
+        #     'test_loader': test_loader,
+        #     'loss_fn': F.mse_loss,
+        #     'epochs': 10,
+        #     'on_epoch_end': on_epoch_end 
+        # }
+
+        # tuner(
+        #     train,
+        #     tunable_params
+        #     # config
+        # )
+
         model, writer = train(
             model=model,
             logdir='ConvAutoencoder',
@@ -98,5 +131,14 @@ if __name__ == '__main__':
             test_loader=test_loader,
             loss_fn=F.mse_loss,
             epochs=10,
-            on_epoch_end=on_epoch_end 
+            on_epoch_end=on_epoch_end,
+            verbose=False
         )
+
+if __name__ == '__main__':
+
+    tunable_params = {
+        'channels': tune.choice(get_channels())
+    }
+    
+    tuner(train_tune, tunable_params)

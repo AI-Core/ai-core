@@ -64,11 +64,16 @@ def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     print(batch_idx, val_loss)
     model.train()
 
-def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None):
+def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None, verbose=False):
     model.train()
     
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    device = torch.device(device)
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda:0"
+        if torch.cuda.device_count() > 1:
+            model = torch.nn.DataParallel(model)
+    # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    # device = torch.device(device)
     model = model.to(device)
 
     writer = SummaryWriter(log_dir=f'runs/{logdir}-{time()}')
@@ -91,7 +96,8 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
             optimiser.zero_grad()
             writer.add_scalar(f'{writer.logdir}/Loss/Train', loss.item(), batch_idx)
             batch_idx += 1
-            print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
+            if verbose:
+                print(f'Epoch: {epoch}\tBatch: {batch_idx}\tLoss: {loss.item()}')
         validate(model, device, val_loader, batch_idx, loss_fn, writer)
         if on_epoch_end:
             on_epoch_end(model, writer, device, epoch)
