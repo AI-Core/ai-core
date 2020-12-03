@@ -66,11 +66,27 @@ def test_accuracy(net, device="cpu"):
 # print(f"Best trial test set accuracy: ({test_acc*100}%) achieved with {best_trial.config['n_layers']} layers")
 
 
-def calc_channel_size(channels, kernel_size, stride):
-    input_shape = (1, 28, 28)
-    w = 28
-    for c_idx in range(1, len(channels)):
-        w = (w - kernel_size) // stride + 1
-        print(f'channel {c_idx}\t size: {w}')
+def calc_channel_size(w, channels, kernel_size, stride):
+    print('calculating conv layer sizes')
+    c = []
+    remainders = []
+    for c_idx in range(len(channels)):
+        remainder = (w - kernel_size) % stride
+        w = (w - kernel_size) // stride + 1 # floor disision if not actually butting up to opposite corner
+        print(f'\tchannel {c_idx+1}\t size: {w}')
+        if remainder != 0:
+            print('\t\t^not perfect')
+        remainders.append(remainder)
+        c.append(w)
+    return c, remainders
 
-    # print('channel sizes:': sizes)
+def calc_transpose_channel_size(w, channels, kernel_size, stride, padding):
+    print('calculating conv transpose layer sizes')
+    c = []
+    for c_idx in range(len(channels)):
+        w = (w + padding[c_idx] - 1) * stride + kernel_size
+        # if the last kernel did not perfectly butt up to the edge, then you need to add 
+        # (w - kernel_size) // stride + 1
+        print(f'\tchannel {c_idx+1}\t size: {w}') 
+        c.append(w)
+    return c

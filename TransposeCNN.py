@@ -1,6 +1,8 @@
 import torch
+from VerboseLayer import VerboseLayer
+
 class TransposeCNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5):
+    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, output_padding=None, verbose=False):
         super().__init__()
         l = []
 
@@ -16,9 +18,15 @@ class TransposeCNN(torch.nn.Module):
             l.append(
                 torch.nn.Dropout(dropout)
             )
+            if output_padding:
+                out_pad = output_padding[idx+1] # the plus one is to offset the padding. padding remainders are generated from the input layers of the conv, but need to be applied to the output of the transpose conv
+            else:
+                out_pad = 0
             l.append(
-                torch.nn.ConvTranspose2d(channels[idx], channels[idx + 1], kernel_size, stride)
+                torch.nn.ConvTranspose2d(channels[idx], channels[idx + 1], kernel_size, stride, output_padding=out_pad)
             )
+            if verbose:
+                l.append(VerboseLayer(idx))
             l.append(
                 torch.nn.BatchNorm2d(channels[idx + 1])
             )

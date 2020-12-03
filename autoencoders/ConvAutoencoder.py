@@ -31,6 +31,7 @@ class ConvAutoencoder(torch.nn.Module):
             decoder_linear_layers,
             decoder_kernel_size,
             decoder_stride,
+            decoder_padding,
             verbose=False
         ):
         super().__init__()
@@ -46,6 +47,8 @@ class ConvAutoencoder(torch.nn.Module):
             linear_layers=decoder_linear_layers,
             kernel_size=decoder_kernel_size,
             stride=decoder_stride,
+            output_padding=decoder_padding,
+            verbose=verbose
         )
 
     def encode(self, x):
@@ -93,10 +96,18 @@ def on_epoch_end(model, writer, device, epoch):
 
 def train_tune(config):
 
+
         channels = config['channels']
         stride = config['stride']
         kernel_size = config['kernel_size']
-   
+
+        channel_sizes, remainders = utils.calc_channel_size(28, channels, kernel_size, stride)
+        print(len(channels))
+        print(len(remainders))
+        utils.calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
+        print(remainders)
+        output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching 
+
         linear_layers = [1, 128]
         linear_layers = []
         # print('channels:', channels)
@@ -109,10 +120,12 @@ def train_tune(config):
             decoder_linear_layers=linear_layers[::-1],
             decoder_kernel_size=kernel_size,
             decoder_stride=stride,
+            decoder_padding=output_padding,
             verbose=True
         )
         print(model.encoder.layers)
         print(model.decoder.layers)
+
 
         # config = {
         #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
@@ -147,7 +160,7 @@ if __name__ == '__main__':
 
     print(get_channels())
 
-    stride = 2
+    stride = 3
     kernel_size = 3
     # sdf
     tunable_params = {
@@ -159,7 +172,9 @@ if __name__ == '__main__':
     }
 
     channels = get_channels()[0]
-    utils.calc_channel_size(channels, kernel_size, stride)
+    # channel_sizes = utils.calc_channel_size(5, [1], 3, 2)
+    # utils.calc_transpose_channel_size(channel_sizes[-1], [1], 3, 2)
+    # scsac
 
     # TEST FORWARD AND BACKWARD PASSES
     train_tune(
