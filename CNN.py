@@ -1,6 +1,16 @@
 import torch
+
+class Verbose(torch.nn.Module):
+    def __init__(self, layer_idx):
+        super().__init__()
+        self.layer_idx = layer_idx
+
+    def forward(self, x):
+        print(f'layer: {self.layer_idx}\tshape: {x.shape}')
+        return x
+
 class CNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5):
+    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, verbose=False):
         super().__init__()
         l = []
 
@@ -9,8 +19,10 @@ class CNN(torch.nn.Module):
                 torch.nn.Dropout(dropout)
             )
             l.append(
-                torch.nn.Conv2d(channels[idx], channels[idx + 1], kernel_size, stride)
+                torch.nn.Conv2d(channels[idx], channels[idx + 1], kernel_size, stride)                    
             )
+            if verbose:
+                l.append(Verbose(idx+1))
             l.append(
                 torch.nn.BatchNorm2d(channels[idx + 1])
             )

@@ -64,3 +64,13 @@ def test_accuracy(net, device="cpu"):
 
 # test_acc = test_accuracy(best_trained_model, device)
 # print(f"Best trial test set accuracy: ({test_acc*100}%) achieved with {best_trial.config['n_layers']} layers")
+
+
+def calc_channel_size(channels, kernel_size, stride):
+    input_shape = (1, 28, 28)
+    w = 28
+    for c_idx in range(1, len(channels)):
+        w = (w - kernel_size) // stride + 1
+        print(f'channel {c_idx}\t size: {w}')
+
+    # print('channel sizes:': sizes)
