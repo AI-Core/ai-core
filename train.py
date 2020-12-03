@@ -1,5 +1,5 @@
 import torch
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 from time import time
 from ray import tune
 import os
@@ -76,7 +76,7 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
     # device = torch.device(device)
     model = model.to(device)
 
-    writer = SummaryWriter(log_dir=f'runs/{logdir}-{time()}')
+    writer = SummaryWriter(log_dir=f'/home/ubuntu/ai-core/runs/{logdir}-{time()}')
     writer.logdir = logdir
     optimiser = torch.optim.SGD(model.parameters(), lr=0.01)
     batch_idx = 0
