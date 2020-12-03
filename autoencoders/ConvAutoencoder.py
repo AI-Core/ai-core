@@ -59,7 +59,7 @@ class ConvAutoencoder(torch.nn.Module):
 
     def forward(self, x):
         x = self.encode(x)
-        print('latent:', x.shape)
+        # print('latent:', x.shape)
         x = self.decode(x)
         return x
 
@@ -102,11 +102,8 @@ def train_tune(config):
         kernel_size = config['kernel_size']
 
         channel_sizes, remainders = utils.calc_channel_size(28, channels, kernel_size, stride)
-        print(len(channels))
-        print(len(remainders))
         utils.calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
-        print(remainders)
-        output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching 
+        output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching
 
         linear_layers = [1, 128]
         linear_layers = []
@@ -121,10 +118,13 @@ def train_tune(config):
             decoder_kernel_size=kernel_size,
             decoder_stride=stride,
             decoder_padding=output_padding,
-            verbose=True
+            verbose=False
         )
         print(model.encoder.layers)
         print(model.decoder.layers)
+
+        latent_size = utils.calc_latent_size(28, channels, kernel_size, stride)
+        model.latent_size = latent_size
 
 
         # config = {
@@ -160,8 +160,8 @@ if __name__ == '__main__':
 
     print(get_channels())
 
-    stride = 3
-    kernel_size = 3
+    stride = 2
+    kernel_size = 4
     # sdf
     tunable_params = {
         'channels': tune.choice(get_channels()),

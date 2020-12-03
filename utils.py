@@ -90,3 +90,9 @@ def calc_transpose_channel_size(w, channels, kernel_size, stride, padding):
         print(f'\tchannel {c_idx+1}\t size: {w}') 
         c.append(w)
     return c
+
+def calc_latent_size(w, channels, kernel_size, stride):
+    c, _ = calc_channel_size(w, channels, kernel_size, stride)
+    final_channel_width = c[-1]
+    latent_size = final_channel_width * final_channel_width * channels[-1]
+    print('latent size:', latent_size)
