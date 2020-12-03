@@ -22,13 +22,6 @@ def tuner(train, tunable_params):
 
             
 
-        
-
-        def checkpoint():
-            with tune.checkpoint_dir(epoch) as checkpoint_dir:
-                path = os.path.join(checkpoint_dir, "checkpoint")
-                torch.save((model.state_dict(), optimiser.state_dict()), path)
-
         # tune.report(
         #     loss=val_loss / len(val_loader),
         #     accuracy=correct / (len(val_loader) * batch_size)
@@ -51,34 +44,33 @@ def tuner(train, tunable_params):
             train,
             resources_per_trial={"cpu": 2, "gpu": 0.2},
             config=tunable_params,
-            num_samples=20,
+            num_samples=2,
             scheduler=scheduler,
             progress_reporter=reporter
         )
+
+
+        best_trial = result.get_best_trial("loss", "min", "last")
+        print(f"Best trial config: {best_trial.config}")
+        print(f"Best trial final validation loss: {best_trial.last_result['loss']}")
+        # print(f"Best trial final validation accuracy: {best_trial.last_result['accuracy']}")
+
+        # best_trained_model = NN(best_trial.config["n_layers"])
+        # device = "cpu"
+        # if torch.cuda.is_available():
+        #     device = "cuda:0"
+        #     if gpus_per_trial > 1:
+        #         best_trained_model = nn.DataParallel(best_trained_model)
+        # best_trained_model.to(device)
+
+        best_checkpoint_dir = best_trial.checkpoint.value
+        best_checkpoint_save = os.path.join(best_checkpoint_dir, "checkpoint")
+        print(f'best checkpoint found at {best_checkpoint_save}')
+        model_state, optimizer_state = torch.load(best_checkpoint_save)
+        # best_trained_model.load_state_dict(model_state)
+
         return result
 
-
-
-
-# best_trial = result.get_best_trial("loss", "min", "last")
-# print("Best trial config: {}".format(best_trial.config))
-# print("Best trial final validation loss: {}".format(
-#     best_trial.last_result["loss"]))
-# print("Best trial final validation accuracy: {}".format(
-#     best_trial.last_result["accuracy"]))
-
-# best_trained_model = NN(best_trial.config["n_layers"])
-# device = "cpu"
-# if torch.cuda.is_available():
-#     device = "cuda:0"
-#     if gpus_per_trial > 1:
-#         best_trained_model = nn.DataParallel(best_trained_model)
-# best_trained_model.to(device)
-
-# best_checkpoint_dir = best_trial.checkpoint.value
-# model_state, optimizer_state = torch.load(os.path.join(
-#     best_checkpoint_dir, "checkpoint"))
-# best_trained_model.load_state_dict(model_state)
 
 
 

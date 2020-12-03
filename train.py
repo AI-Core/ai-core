@@ -102,6 +102,11 @@ def train(model, optimiser, logdir, config_str, train_loader, val_loader, test_l
         validate(model, device, val_loader, batch_idx, loss_fn, writer)
         if on_epoch_end:
             on_epoch_end(model, writer, device, epoch)
+
+        with tune.checkpoint_dir(epoch) as checkpoint_dir:
+            path = os.path.join(checkpoint_dir, "checkpoint")
+            torch.save((model.state_dict(), optimiser.state_dict()), path)
+
         print(f'Epoch: {epoch}\tLoss: {loss.item()}')
 
         # checkpoint(model, optimiser, epoch)

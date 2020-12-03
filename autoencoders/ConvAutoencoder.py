@@ -151,7 +151,7 @@ def train_tune(config):
             val_loader=val_loader,
             test_loader=test_loader,
             loss_fn=F.mse_loss,
-            epochs=10,
+            epochs=1,
             on_epoch_end=on_epoch_end,
             verbose=False
         )
@@ -171,19 +171,16 @@ if __name__ == '__main__':
         'kernel_size': kernel_size
     }
 
-    channels = get_channels()[0]
-    # channel_sizes = utils.calc_channel_size(5, [1], 3, 2)
-    # utils.calc_transpose_channel_size(channel_sizes[-1], [1], 3, 2)
-    # scsac
+    # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    train_tune(
-        {
-            **tunable_params,
-            'channels': get_channels()[0],
-            'optimiser': 'sgd',
-            'lr': 0.1,
-        } 
-    )
+    # train_tune(
+    #     {
+    #         **tunable_params,
+    #         'channels': get_channels()[0],
+    #         'optimiser': 'sgd',
+    #         'lr': 0.1,
+    #     } 
+    # )
     
     tuner(train_tune, tunable_params)
