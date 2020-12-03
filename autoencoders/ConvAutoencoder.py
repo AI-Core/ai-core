@@ -88,16 +88,31 @@ def on_epoch_end(model, writer, device, epoch):
         break
     model.train()
 
-def get_channels():
+def get_channels(strat='paired_exponential'):
     channel_options = []
-    start_idx = 6
-    stop_idx = 9
-    for idx in range(start_idx, stop_idx):
-        channels = [
-            1, # init channels`
-            *[2**idx for idx in range(start_idx, idx+2)]
-        ]
-        channel_options.append(channels)
+    if strat == 'exponential':
+        start_idx = 6
+        stop_idx = 9
+        for idx in range(start_idx, stop_idx):
+            channels = [
+                1, # init channels`
+                *[2**idx for idx in range(start_idx, idx+2)]
+            ]
+            channel_options.append(channels)
+    elif strat=='paired_exponential':
+        start_idx = 5
+        stop_idx = 7
+        for idx in range(start_idx, stop_idx):
+            c = [1]
+            for i in range(start_idx, idx+1):
+                val = 2**i
+                c.extend([val, val])
+            channel_options.append(
+                c
+            )
+    else:
+        raise ValueError('Strategy for getting channels not specified')
+
     return channel_options
 
 def train_tune(config):
@@ -107,7 +122,7 @@ def train_tune(config):
         kernel_size = config['kernel_size']
    
         linear_layers = [576, 128]
-        print('channels:', channels)
+        # print('channels:', channels)
         model = ConvAutoencoder(
             encoder_channels=channels,
             encoder_linear_layers=linear_layers,
@@ -152,21 +167,23 @@ def train_tune(config):
 
 if __name__ == '__main__':
 
+    print(get_channels())
+    # sdf
     tunable_params = {
         'channels': tune.choice(get_channels()),
         'optimiser': tune.choice(['adam', 'sgd']),
         'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
-        'stride': 2,
+        'stride': 1,
         'kernel_size': 4
     }
 
     # TEST FORWARD AND BACKWARD PASSES
     # train_tune(
     #     {
-    #         'channels': [1, 2],
+    #         'channels': get_channels()[0],
     #         'optimiser': 'sgd',
     #         'lr': 0.1,
-    #         'stride': 2,
+    #         'stride': 1,
     #         'kernel_size': 4
     #     } 
     # )
