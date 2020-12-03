@@ -50,7 +50,7 @@ def checkpoint(model, optimiser, epoch):
 
 def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     model.eval()
-    print('validating')
+    # print('validating')
     val_loss = 0
     for (x, y) in val_loader:
         x = x.to(device)
@@ -60,11 +60,9 @@ def validate(model, device, val_loader, batch_idx, loss_fn, writer):
         val_loss += loss.item()
     val_loss /= len(val_loader)
     writer.add_scalar(f'{writer.logdir}/Loss/Validation', val_loss, batch_idx)
-    print(batch_idx)
-    print(batch_idx, val_loss)
     model.train()
 
-def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None, verbose=False):
+def train(model, optimiser, logdir, config_str, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None, verbose=False):
     model.train()
     
     device = "cpu"
@@ -76,9 +74,8 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
     # device = torch.device(device)
     model = model.to(device)
 
-    writer = SummaryWriter(log_dir=f'/home/ubuntu/ai-core/runs/{logdir}-{time()}')
+    writer = SummaryWriter(log_dir=f'/home/ubuntu/ai-core/runs/{logdir}-{config_str}-{time()}')
     writer.logdir = logdir
-    optimiser = torch.optim.SGD(model.parameters(), lr=0.01)
     batch_idx = 0
     # validate(model, val_loader, batch_idx, loss_fn, writer)
     for epoch in range(epochs):
@@ -101,6 +98,7 @@ def train(model, logdir, train_loader, val_loader, test_loader, loss_fn, epochs=
         validate(model, device, val_loader, batch_idx, loss_fn, writer)
         if on_epoch_end:
             on_epoch_end(model, writer, device, epoch)
+        print(f'Epoch: {epoch}\tLoss: {loss.item()}')
 
         # checkpoint(model, optimiser, epoch)
     return model, writer

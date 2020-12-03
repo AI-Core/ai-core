@@ -43,7 +43,7 @@ def tuner(train, tunable_params):
         )
 
         reporter = tune.CLIReporter(
-            parameter_columns=["lr", "batch_size"],
+            parameter_columns=list(tunable_params.keys()),
             metric_columns=["loss", "accuracy", "training_iteration"]
         )
 
@@ -55,6 +55,7 @@ def tuner(train, tunable_params):
             scheduler=scheduler,
             progress_reporter=reporter
         )
+        return result
 
 
 

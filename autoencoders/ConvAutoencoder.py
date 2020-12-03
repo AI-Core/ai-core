@@ -13,6 +13,7 @@ from NN import NN
 from TransposeCNN import TransposeCNN
 from ae_utils import visualise_reconstruction
 from tuning.tuner import tuner
+import json
 
 batch_size = 16
 
@@ -97,35 +98,27 @@ def train_tune(config):
             decoder_channels=channels[::-1],
             decoder_linear_layers=linear_layers[::-1]
         )
-        # print(f'training model {idx}')
-        # print(model.encoder.layers)
 
         # config = {
         #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
         #     # "n_layers": tune.grid_search(list(range(1, 10))),
         #     "batch_size": tune.choice([2, 4, 8, 16])
         # }
-        
-        # config = {
-        #     'model': model,
-        #     'logdir': 'ConvAutoencoder',
-        #     'train_loader': train_loader,
-        #     'val_loader': val_loader,
-        #     'test_loader': test_loader,
-        #     'loss_fn': F.mse_loss,
-        #     'epochs': 10,
-        #     'on_epoch_end': on_epoch_end 
-        # }
 
-        # tuner(
-        #     train,
-        #     tunable_params
-        #     # config
-        # )
+        config_str = json.dumps(config)
+
+        if config['optimiser'] == 'sgd':
+            optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
+        elif config['optimiser'] == 'adam':
+            optimiser = torch.optim.Adam(model.parameters(), lr=config['lr'])
+        else:
+            raise ValueError('Optimiser not specified in tuner config')
 
         model, writer = train(
             model=model,
+            optimiser=optimiser,
             logdir='ConvAutoencoder',
+            config_str=config_str,
             train_loader=train_loader,
             val_loader=val_loader,
             test_loader=test_loader,
@@ -138,7 +131,9 @@ def train_tune(config):
 if __name__ == '__main__':
 
     tunable_params = {
-        'channels': tune.choice(get_channels())
+        'channels': tune.choice(get_channels()),
+        'optimiser': tune.choice(['adam', 'sgd']),
+        'lr': tune.choice([10**(-idx) for idx in range(1, 5)])
     }
     
     tuner(train_tune, tunable_params)
