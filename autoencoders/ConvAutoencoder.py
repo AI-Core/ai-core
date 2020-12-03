@@ -73,7 +73,6 @@ def on_epoch_end(model, writer, device, epoch):
         break
     model.train()
 
-
 def get_channels():
     channel_options = []
     start_idx = 3

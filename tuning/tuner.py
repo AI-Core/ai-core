@@ -49,9 +49,9 @@ def tuner(train, tunable_params):
 
         result = tune.run(
             train,
-            resources_per_trial={"cpu": 2, "gpu": 1},
+            resources_per_trial={"cpu": 2, "gpu": 0.2},
             config=tunable_params,
-            num_samples=1,
+            num_samples=20,
             scheduler=scheduler,
             progress_reporter=reporter
         )

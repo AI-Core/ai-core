@@ -62,6 +62,10 @@ def validate(model, device, val_loader, batch_idx, loss_fn, writer):
     writer.add_scalar(f'{writer.logdir}/Loss/Validation', val_loss, batch_idx)
     model.train()
 
+    tune.report(loss=val_loss) # report metric for eliminating poor trials
+    print('reported')
+
+
 def train(model, optimiser, logdir, config_str, train_loader, val_loader, test_loader, loss_fn, epochs=1, on_epoch_end=None, verbose=False):
     model.train()
     
