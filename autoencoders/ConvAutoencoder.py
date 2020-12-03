@@ -11,7 +11,7 @@ from train import train
 from torch.utils.data import DataLoader
 from NN import NN
 from TransposeCNN import TransposeCNN
-from ae_utils import visualise_reconstruction
+from ae_utils import visualise_reconstruction, sample
 from tuning.tuner import tuner
 import json
 from get_channels import get_channels
@@ -19,6 +19,13 @@ from get_channels import get_channels
 batch_size = 16
 
 train_data, val_data, test_data = utils.get_splits()
+
+# class AiCoreModel(torch.nn.Module):
+#     def __init__(self, **kwargs):
+#         super().__init__()
+#         print(kwargs)
+#         print('yoooo')
+#         sssdfs
 
 class ConvAutoencoder(torch.nn.Module):
     def __init__(
@@ -34,6 +41,17 @@ class ConvAutoencoder(torch.nn.Module):
             decoder_padding,
             verbose=False
         ):
+        self.config = {
+            'encoder_channels': encoder_channels,
+            'encoder_linear_layers': encoder_linear_layers,
+            'encoder_kernel_size': encoder_kernel_size,
+            'encoder_stride': encoder_stride,
+            'decoder_channels': decoder_channels,
+            'decoder_linear_layers': decoder_linear_layers,
+            'decoder_kernel_size': decoder_kernel_size,
+            'decoder_stride': decoder_stride,
+            'decoder_padding': decoder_padding
+        }
         super().__init__()
         self.encoder = CNN(
             channels=encoder_channels, 
@@ -144,6 +162,7 @@ def train_tune(config):
 
         model, writer = train(
             model=model,
+            model_class=ConvAutoencoder,
             optimiser=optimiser,
             logdir='ConvAutoencoder',
             config_str=config_str,
@@ -183,4 +202,15 @@ if __name__ == '__main__':
     #     } 
     # )
     
-    tuner(train_tune, tunable_params)
+    result = tuner(train_tune, tunable_params)
+            
+    best_trial = result.get_best_trial("loss", "min", "last")
+    best_checkpoint_dir = best_trial.checkpoint.value
+    best_checkpoint_save = os.path.join(best_checkpoint_dir, "checkpoint")
+    print(f'best checkpoint found at {best_checkpoint_save}')
+    state_dict, model_config, optimiser_state = torch.load(best_checkpoint_save)
+    print(model_config)
+    best_model = ConvAutoencoder(**model_config)
+    best_model.load_state_dict(state_dict)
+
+    sample(best_model.decoder, 32)

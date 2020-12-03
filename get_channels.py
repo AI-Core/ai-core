@@ -3,7 +3,7 @@ def get_channels(strat='paired_exponential'):
     channel_options = []
     if strat == 'exponential':
         start_idx = 6
-        stop_idx = 9
+        stop_idx = 8
         for idx in range(start_idx, stop_idx):
             channels = [
                 1, # init channels`
@@ -12,7 +12,7 @@ def get_channels(strat='paired_exponential'):
             channel_options.append(channels)
     elif strat=='paired_exponential':
         start_idx = 5
-        stop_idx = 7
+        stop_idx = 6
         for idx in range(start_idx, stop_idx):
             c = [1]
             for i in range(start_idx, idx+1):

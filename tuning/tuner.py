@@ -66,7 +66,7 @@ def tuner(train, tunable_params):
         best_checkpoint_dir = best_trial.checkpoint.value
         best_checkpoint_save = os.path.join(best_checkpoint_dir, "checkpoint")
         print(f'best checkpoint found at {best_checkpoint_save}')
-        model_state, optimizer_state = torch.load(best_checkpoint_save)
+        # model_state, optimizer_state = torch.load(best_checkpoint_save)
         # best_trained_model.load_state_dict(model_state)
 
         return result
