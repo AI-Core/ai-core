@@ -24,12 +24,26 @@ class ConvAutoencoder(torch.nn.Module):
             self, 
             encoder_channels,
             encoder_linear_layers,
+            encoder_kernel_size,
+            encoder_stride,
             decoder_channels,
             decoder_linear_layers,
+            decoder_kernel_size,
+            decoder_stride
         ):
         super().__init__()
-        self.encoder = CNN(encoder_channels, linear_layers=[])
-        self.decoder = TransposeCNN(decoder_channels, linear_layers=[])
+        self.encoder = CNN(
+            channels=encoder_channels, 
+            linear_layers=[],
+            kernel_size=encoder_kernel_size,
+            stride=encoder_stride
+        )
+        self.decoder = TransposeCNN(
+            channels=decoder_channels, 
+            linear_layers=[],
+            kernel_size=decoder_kernel_size,
+            stride=decoder_stride
+        )
 
     def encode(self, x):
         return self.encoder(x)
@@ -38,9 +52,10 @@ class ConvAutoencoder(torch.nn.Module):
         return self.decoder(z)
 
     def forward(self, x):
-        z = self.encode(x)
-        h = self.decode(z)
-        return h
+        x = self.encode(x)
+        # print('latent:', x.shape)
+        x = self.decode(x)
+        return x
 
 class AEDataset(torch.utils.data.Dataset):
     def __init__(self, dataset, transform=None):
@@ -75,7 +90,7 @@ def on_epoch_end(model, writer, device, epoch):
 
 def get_channels():
     channel_options = []
-    start_idx = 3
+    start_idx = 6
     stop_idx = 9
     for idx in range(start_idx, stop_idx):
         channels = [
@@ -88,15 +103,23 @@ def get_channels():
 def train_tune(config):
 
         channels = config['channels']
+        stride = config['stride']
+        kernel_size = config['kernel_size']
    
         linear_layers = [576, 128]
         print('channels:', channels)
         model = ConvAutoencoder(
             encoder_channels=channels,
             encoder_linear_layers=linear_layers,
+            encoder_kernel_size=kernel_size,
+            encoder_stride=stride,
             decoder_channels=channels[::-1],
-            decoder_linear_layers=linear_layers[::-1]
+            decoder_linear_layers=linear_layers[::-1],
+            decoder_kernel_size=kernel_size,
+            decoder_stride=stride
         )
+        # print(model.encoder.layers)
+        # print(model.decoder.layers)
 
         # config = {
         #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
@@ -132,7 +155,20 @@ if __name__ == '__main__':
     tunable_params = {
         'channels': tune.choice(get_channels()),
         'optimiser': tune.choice(['adam', 'sgd']),
-        'lr': tune.choice([10**(-idx) for idx in range(1, 5)])
+        'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
+        'stride': 2,
+        'kernel_size': 4
     }
+
+    # TEST FORWARD AND BACKWARD PASSES
+    # train_tune(
+    #     {
+    #         'channels': [1, 2],
+    #         'optimiser': 'sgd',
+    #         'lr': 0.1,
+    #         'stride': 2,
+    #         'kernel_size': 4
+    #     } 
+    # )
     
     tuner(train_tune, tunable_params)

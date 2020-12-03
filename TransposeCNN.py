@@ -1,11 +1,8 @@
 import torch
 class TransposeCNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, dropout=0.5):
+    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5):
         super().__init__()
         l = []
-
-        kernel_size = 3
-        stride = 1
 
         for idx in range(len(linear_layers) - 1):
             l.extend([
