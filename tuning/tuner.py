@@ -5,7 +5,7 @@ import torch
 # def tune_that_shit():
 
 
-def tuner(train, tunable_params):
+def tuner(train, tunable_params, num_samples=20):
     # print(config)
 
     # def wrapper(*args, config):
@@ -44,9 +44,10 @@ def tuner(train, tunable_params):
             train,
             resources_per_trial={"cpu": 2, "gpu": 0.2},
             config=tunable_params,
-            num_samples=200,
+            num_samples=num_samples,
             scheduler=scheduler,
-            progress_reporter=reporter
+            progress_reporter=reporter,
+            raise_on_failed_trial=False
         )
 
 

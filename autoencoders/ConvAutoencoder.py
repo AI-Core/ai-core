@@ -171,7 +171,7 @@ def train_tune(config):
             val_loader=val_loader,
             test_loader=test_loader,
             loss_fn=F.mse_loss,
-            epochs=100,
+            epochs=1,
             on_epoch_end=on_epoch_end,
             verbose=False
         )
@@ -187,7 +187,7 @@ if __name__ == '__main__':
         'channels': tune.choice(get_channels()),
         'optimiser': tune.choice(['adam', 'sgd']),
         'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
-        'stride': tune.choice([2, 3]),
+        'stride': tune.choice([2, 3, 4]),
         'kernel_size': tune.choice([3, 4, 5])
     }
 
@@ -203,7 +203,11 @@ if __name__ == '__main__':
     #     } 
     # )
     
-    result = tuner(train_tune, tunable_params)
+    result = tuner(
+        train_tune, 
+        tunable_params, 
+        num_samples=2
+    )
             
     best_trial = result.get_best_trial("loss", "min", "last")
     best_checkpoint_dir = best_trial.checkpoint.value
