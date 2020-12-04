@@ -77,7 +77,7 @@ class ConvAutoencoder(torch.nn.Module):
 
     def forward(self, x):
         x = self.encode(x)
-        print('latent:', x.shape)
+        # print('latent:', x.shape)
         # scsds
         x = self.decode(x)
         return x
@@ -171,7 +171,7 @@ def train_tune(config):
             val_loader=val_loader,
             test_loader=test_loader,
             loss_fn=F.mse_loss,
-            epochs=1,
+            epochs=100,
             on_epoch_end=on_epoch_end,
             verbose=False
         )
@@ -187,21 +187,21 @@ if __name__ == '__main__':
         'channels': tune.choice(get_channels()),
         'optimiser': tune.choice(['adam', 'sgd']),
         'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
-        'stride': stride,
-        'kernel_size': kernel_size
+        'stride': tune.choice([2, 3]),
+        'kernel_size': tune.choice([3, 4, 5])
     }
 
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    train_tune(
-        {
-            **tunable_params,
-            'channels': get_channels()[0],
-            'optimiser': 'sgd',
-            'lr': 0.1,
-        } 
-    )
+    # train_tune(
+    #     {
+    #         **tunable_params,
+    #         'channels': get_channels()[0],
+    #         'optimiser': 'sgd',
+    #         'lr': 0.1,
+    #     } 
+    # )
     
     result = tuner(train_tune, tunable_params)
             
