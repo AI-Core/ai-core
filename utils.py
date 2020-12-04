@@ -70,7 +70,7 @@ def calc_channel_size(w, channels, kernel_size, stride):
     print('calculating conv layer sizes')
     c = []
     remainders = []
-    for c_idx in range(len(channels)):
+    for c_idx in range(len(channels)-1):
         remainder = (w - kernel_size) % stride
         w = (w - kernel_size) // stride + 1 # floor disision if not actually butting up to opposite corner
         print(f'\tchannel {c_idx+1}\t size: {w}')
@@ -83,7 +83,7 @@ def calc_channel_size(w, channels, kernel_size, stride):
 def calc_transpose_channel_size(w, channels, kernel_size, stride, padding):
     print('calculating conv transpose layer sizes')
     c = []
-    for c_idx in range(len(channels)):
+    for c_idx in range(len(channels)-1):
         w = (w + padding[c_idx] - 1) * stride + kernel_size
         # if the last kernel did not perfectly butt up to the edge, then you need to add 
         # (w - kernel_size) // stride + 1

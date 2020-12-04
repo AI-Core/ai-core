@@ -17,7 +17,7 @@ def get_channels(strat='paired_exponential'):
             c = [1]
             for i in range(start_idx, idx+1):
                 val = 2**i
-                c.extend([val, val])
+                c.extend([val, val, val])
             channel_options.append(
                 c
             )

@@ -1,5 +1,6 @@
 from torch.utils.tensorboard import SummaryWriter
 import torch
+from time import time
 
 def visualise_reconstruction(writer, originals, reconstructions, label):
 
@@ -8,8 +9,9 @@ def visualise_reconstruction(writer, originals, reconstructions, label):
 
 def sample(generator, latent_dim):
     batch_size = 16
-    z = torch.randn(batch_size, latent_dim, 1, 1)
+    z = torch.randn(batch_size, latent_dim, 5, 5)
     h = generator(z)
-    writer = SummaryWriter(log_dir='/home/ubuntu/ai-core/runs/Generated')
+    print(h.shape)
+    writer = SummaryWriter(log_dir=f'/home/ubuntu/ai-core/runs/Generated-{time()}')
     print('adding imgs')
-    writer.add_images('generated', h)
+    writer.add_images(f'Generated/Loss/Gen-{time()}', h)

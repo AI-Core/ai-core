@@ -19,7 +19,7 @@ class TransposeCNN(torch.nn.Module):
                 torch.nn.Dropout(dropout)
             )
             if output_padding:
-                out_pad = output_padding[idx+1] # the plus one is to offset the padding. padding remainders are generated from the input layers of the conv, but need to be applied to the output of the transpose conv
+                out_pad = output_padding[idx] # the plus one is to offset the padding. padding remainders are generated from the input layers of the conv, but need to be applied to the output of the transpose conv
             else:
                 out_pad = 0
             l.append(
