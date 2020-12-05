@@ -47,7 +47,6 @@ def get_channels(
     elif strat == 'from_to':
         input_size = kwargs['input_size']
         # to = 
-        num_latent = 128
         strides = []
         kernel_sizes = []
         test_channels_options = get_channels(
@@ -68,19 +67,22 @@ def get_channels(
                     )
                     if channel_sizes[-1] < 1: # if resulting in a (negative) nonsensical final output dim 
                         continue
-                    sfs
-                    architecture.actual_latent_size = architecture.calc_latent_size(_from, channels, kernel_size, stride)
-                    if  actual_latent_size > kwargs['latent_dim']: #if this arch doesnt result in a latent size of near what we want
+                    actual_latent_size = architecture.calc_latent_size(
+                        input_size, 
+                        test_channels, 
+                        kernel_size, 
+                        stride
+                    )
+                    if  actual_latent_size > kwargs['output_dim']: #if this arch doesnt result in a latent size of near what we want
                         continue # continue to the next trial without adding it to the options
                     else:
                         strides.append(stride)
                         kernel_sizes.append(kernel_size)
                         channel_options.append(test_channels)
 
-        print('channel_options:', channel_options)
-        print(kernel_sizes)
-        print(strides)
-        fewsdf
+        # print('channel_options:', channel_options)
+        # print(kernel_sizes)
+        # print(strides)
         return channel_options, kernel_sizes, strides
 
     else:

@@ -11,9 +11,9 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
 
     _from = input_size
     to = round(0.2 * input_size)
-    channels, kernel_sizes, strides = get_channels(input_size=28, strat='from_to')
+    channels, kernel_sizes, strides = get_channels(input_size=28, output_dim=128, strat='from_to')
 
-    calc_latent_size(input_size, channels, kernel_size, stride)
+    # calc_latent_size(input_size, channels, kernel_size, stride)
 
     channel_sizes, remainders = calc_channel_size(28, channels, kernel_size, stride)
     calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
@@ -48,30 +48,26 @@ def get_conv_architecture(input_size, output_size=[2, 3, 4]):
 
 
 def calc_channel_size(w, channels, kernel_size, stride):
-    print('calculating conv layer sizes')
+    # print('calculating conv layer sizes')
     c = []
-    print(w, kernel_size)
     remainders = []
-    print(channels)
-    print(len(channels))
     for c_idx in range(len(channels)-1):
         remainder = (w - kernel_size) % stride
         w = (w - kernel_size) // stride + 1 # floor disision if not actually butting up to opposite corner
-        print(f'\tchannel {c_idx+1}\t size: {w}')
-        if remainder != 0:
-            print('\t\t^not perfect')
+        # print(f'\tchannel {c_idx+1}\t size: {w}')
+        # if remainder != 0:
+            # print('\t\t^not perfect')
         remainders.append(remainder)
         c.append(w)
     return c, remainders
 
 def calc_transpose_channel_size(w, channels, kernel_size, stride, padding):
-    print('calculating conv transpose layer sizes')
+    # print('calculating conv transpose layer sizes')
     c = []
     for c_idx in range(len(channels)-1):
-        w = (w + padding[c_idx] - 1) * stride + kernel_size
-        # if the last kernel did not perfectly butt up to the edge, then you need to add 
+        w = (w + padding[c_idx] - 1) * stride + kernel_size # if the last kernel did not perfectly butt up to the edge, then you need to add padding
         # (w - kernel_size) // stride + 1
-        print(f'\tchannel {c_idx+1}\t size: {w}') 
+        # print(f'\tchannel {c_idx+1}\t size: {w}') 
         c.append(w)
     return c
 
@@ -79,7 +75,8 @@ def calc_latent_size(w, channels, kernel_size, stride):
     c, _ = calc_channel_size(w, channels, kernel_size, stride)
     final_channel_width = c[-1]
     latent_size = final_channel_width * final_channel_width * channels[-1]
-    print('latent size:', latent_size)
+    # print('latent size:', latent_size)
+    return latent_size
 
 def get_linear_layers():
     pass
