@@ -32,7 +32,6 @@ train_data, val_data, test_data = utils.get_splits()
 class ConvAutoencoder(torch.nn.Module):
     def __init__(
             self, 
-            input_size,
             encoder_channels,
             encoder_linear_layers,
             encoder_kernel_size,
@@ -55,7 +54,6 @@ class ConvAutoencoder(torch.nn.Module):
             'decoder_stride': decoder_stride,
             'decoder_padding': decoder_padding
         }
-        self.latent_dim = architecture.calc_latent_size(input_size, encoder_channels, encoder_kernel_size, encoder_stride)
         super().__init__()
         self.encoder = CNN(
             channels=encoder_channels, 
@@ -72,6 +70,10 @@ class ConvAutoencoder(torch.nn.Module):
             output_padding=decoder_padding,
             verbose=verbose
         )
+
+    def set_latent(self, input_size):
+        latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride'])
+        self.latent_size = latent_size
 
     def encode(self, x):
         return self.encoder(x)
@@ -119,8 +121,9 @@ def on_epoch_end(model, writer, device, epoch):
 
 def train_tune(config):
 
+        input_size = 28
         ae_arch = architecture.get_ae_architecture(
-            input_size=28,
+            input_size=input_size,
             latent_dim=128
         )
         # ae_arch = random.choice(ae_arch) # randomly choose one of these
@@ -129,7 +132,6 @@ def train_tune(config):
         # linear_layers = []
         # print('channels:', channels)
         model = ConvAutoencoder(
-            input_size=28,
             **ae_arch
             # encoder_channels=channels,
             # encoder_linear_layers=linear_layers,
@@ -142,6 +144,8 @@ def train_tune(config):
             # decoder_padding=output_padding,
             # verbose=False
         )
+        model.set_latent(input_size)
+        print('model latent dim:', model.latent_size)
         print(model.encoder.layers)
         print(model.decoder.layers)
 
@@ -151,7 +155,7 @@ def train_tune(config):
         #     "batch_size": tune.choice([2, 4, 8, 16])
         # }
 
-        config_str = json.dumps(config)
+        config_str = json.dumps({**config, 'latent_dim': model.latent_size})
 
         if config['optimiser'] == 'sgd':
             optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
@@ -170,7 +174,7 @@ def train_tune(config):
             val_loader=val_loader,
             test_loader=test_loader,
             loss_fn=F.mse_loss,
-            epochs=1,
+            epochs=10,
             on_epoch_end=on_epoch_end,
             verbose=False
         )
@@ -193,21 +197,21 @@ if __name__ == '__main__':
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    train_tune(
-        {
-            **tunable_params,
-            # 'channels': get_channels()[0],
-            'optimiser': 'sgd',
-            'lr': 0.1,
-            # 'stride': 2,
-            # 'kernel_size': 3
-        } 
-    )
+    # train_tune(
+    #     {
+    #         **tunable_params,
+    #         # 'channels': get_channels()[0],
+    #         'optimiser': 'sgd',
+    #         'lr': 0.1,
+    #         # 'stride': 2,
+    #         # 'kernel_size': 3
+    #     } 
+    # )
     
     result = tuner(
         train_tune, 
         tunable_params, 
-        num_samples=2
+        num_samples=20
     )
             
     best_trial = result.get_best_trial("loss", "min", "last")
