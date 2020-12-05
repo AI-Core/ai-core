@@ -11,8 +11,9 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     # kernel_size = config['kernel_size']
 
     _from = input_size
-    to = round(0.2 * input_size)
-    channels, kernel_sizes, strides = get_channels(input_size=28, output_dim=128, strat='from_to')
+    conv_output_dim = round(0.2 * input_size)
+    conv_output_dim = latent_dim
+    channels, kernel_sizes, strides = get_channels(input_size=input_size, output_dim=conv_output_dim, strat='from_to')
 
     arch_idx = random.choice(range(len(channels)))
     channels = channels[arch_idx]

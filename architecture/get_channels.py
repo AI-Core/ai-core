@@ -58,7 +58,7 @@ def get_channels(
         ) 
         for test_channels in test_channels_options:
             for stride in range(1, 5):
-                for kernel_size in [3, 4, 5, 7]:
+                for kernel_size in [1, 2, 3, 4, 5, 7]:
                     channel_sizes, _ = architecture.calc_channel_size(
                         input_size,
                         test_channels,
@@ -88,12 +88,12 @@ def get_channels(
                         strides.append(stride)
                         kernel_sizes.append(kernel_size)
                         channel_options.append(test_channels)
-                        # print('added to options')
+        #                 print('added to options')
 
-                    # print()
+        #             print()
 
         # print(channel_options)
-        # # cec
+        # cec
 
         # print('channel_options:', channel_options)
         # print(len(channel_options))
