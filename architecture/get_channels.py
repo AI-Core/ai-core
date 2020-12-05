@@ -65,22 +65,39 @@ def get_channels(
                         kernel_size,
                         stride
                     )
-                    if channel_sizes[-1] < 1: # if resulting in a (negative) nonsensical final output dim 
+
+                    last_channel_size = channel_sizes[-1]
+                    if last_channel_size < 1: # if resulting in a (negative) nonsensical final output dim 
                         continue
+
+                    # if kernel_size > last_channel_size: #if kernel too big to convolve
+                    #     continue # continue to the next trial
+
                     actual_latent_size = architecture.calc_latent_size(
                         input_size, 
                         test_channels, 
                         kernel_size, 
                         stride
                     )
+                    
+                    # print('calculated_latent_size', actual_latent_size)
                     if  actual_latent_size > kwargs['output_dim']: #if this arch doesnt result in a latent size of near what we want
+                        # print('not added to options')
                         continue # continue to the next trial without adding it to the options
                     else:
                         strides.append(stride)
                         kernel_sizes.append(kernel_size)
                         channel_options.append(test_channels)
+                        # print('added to options')
+
+                    # print()
+
+        # print(channel_options)
+        # # cec
 
         # print('channel_options:', channel_options)
+        # print(len(channel_options))
+        assert len(channel_options) > 0
         # print(kernel_sizes)
         # print(strides)
         return channel_options, kernel_sizes, strides

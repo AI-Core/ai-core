@@ -70,6 +70,7 @@ class ConvAutoencoder(torch.nn.Module):
             output_padding=decoder_padding,
             verbose=verbose
         )
+        self.verbose = verbose
 
     def set_latent(self, input_size):
         latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride'])
@@ -83,9 +84,11 @@ class ConvAutoencoder(torch.nn.Module):
 
     def forward(self, x):
         x = self.encode(x)
-        # print('latent:', x.shape)
-        # scsds
+        if self.verbose:
+            print('latent:', x.shape)
+            print('calculated latent:', self.latent_size)
         x = self.decode(x)
+        # scsz
         return x
 
 class AEDataset(torch.utils.data.Dataset):
@@ -126,34 +129,14 @@ def train_tune(config):
             input_size=input_size,
             latent_dim=128
         )
-        # ae_arch = random.choice(ae_arch) # randomly choose one of these
+        
+        # model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
+        model = ConvAutoencoder(**ae_arch)
 
-        # linear_layers = [1, 128]
-        # linear_layers = []
-        # print('channels:', channels)
-        model = ConvAutoencoder(
-            **ae_arch
-            # encoder_channels=channels,
-            # encoder_linear_layers=linear_layers,
-            # encoder_kernel_size=kernel_size,
-            # encoder_stride=stride,
-            # decoder_channels=channels[::-1],
-            # decoder_linear_layers=linear_layers[::-1],
-            # decoder_kernel_size=kernel_size,
-            # decoder_stride=stride,
-            # decoder_padding=output_padding,
-            # verbose=False
-        )
         model.set_latent(input_size)
-        print('model latent dim:', model.latent_size)
-        print(model.encoder.layers)
-        print(model.decoder.layers)
-
-        # config = {
-        #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
-        #     # "n_layers": tune.grid_search(list(range(1, 10))),
-        #     "batch_size": tune.choice([2, 4, 8, 16])
-        # }
+        # print(model.encoder.layers)
+        # print(model.decoder.layers)
+        # print('model latent dim:', model.latent_size)
 
         config_str = json.dumps({**config, 'latent_dim': model.latent_size})
 
