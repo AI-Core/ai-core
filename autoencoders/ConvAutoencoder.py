@@ -138,7 +138,7 @@ def train_tune(config):
         # print(model.decoder.layers)
         # print('model latent dim:', model.latent_size)
 
-        config_str = json.dumps({**config, 'latent_dim': model.latent_size})
+        config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
         if config['optimiser'] == 'sgd':
             optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
