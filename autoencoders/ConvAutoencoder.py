@@ -14,7 +14,9 @@ from TransposeCNN import TransposeCNN
 from ae_utils import visualise_reconstruction, sample
 from tuning.tuner import tuner
 import json
-from get_channels import get_channels
+from architecture import get_channels
+import architecture
+import random
 
 batch_size = 16
 
@@ -116,33 +118,32 @@ def on_epoch_end(model, writer, device, epoch):
 def train_tune(config):
 
 
-        channels = config['channels']
-        stride = config['stride']
-        kernel_size = config['kernel_size']
-
-        channel_sizes, remainders = utils.calc_channel_size(28, channels, kernel_size, stride)
-        utils.calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
-        output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching
+        ae_arch = architecture.get_ae_architecture(
+            input_size=28,
+            latent_dim=128
+        )
+        ae_arch = random.choice(ae_arch)
 
         linear_layers = [1, 128]
         linear_layers = []
         # print('channels:', channels)
         model = ConvAutoencoder(
-            encoder_channels=channels,
-            encoder_linear_layers=linear_layers,
-            encoder_kernel_size=kernel_size,
-            encoder_stride=stride,
-            decoder_channels=channels[::-1],
-            decoder_linear_layers=linear_layers[::-1],
-            decoder_kernel_size=kernel_size,
-            decoder_stride=stride,
-            decoder_padding=output_padding,
-            verbose=False
+            **ae_arch
+            # encoder_channels=channels,
+            # encoder_linear_layers=linear_layers,
+            # encoder_kernel_size=kernel_size,
+            # encoder_stride=stride,
+            # decoder_channels=channels[::-1],
+            # decoder_linear_layers=linear_layers[::-1],
+            # decoder_kernel_size=kernel_size,
+            # decoder_stride=stride,
+            # decoder_padding=output_padding,
+            # verbose=False
         )
         print(model.encoder.layers)
         print(model.decoder.layers)
 
-        latent_size = utils.calc_latent_size(28, channels, kernel_size, stride)
+        latent_size = architecture.calc_latent_size(28, channels, kernel_size, stride)
         model.latent_size = latent_size
 
 
@@ -178,30 +179,32 @@ def train_tune(config):
 
 if __name__ == '__main__':
 
-    print(get_channels())
+    # print(get_channels())
 
     stride = 2
     kernel_size = 4
     # sdf
     tunable_params = {
-        'channels': tune.choice(get_channels()),
+        # 'channels': tune.choice(get_channels()),
         'optimiser': tune.choice(['adam', 'sgd']),
         'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
-        'stride': tune.choice([2, 3, 4]),
-        'kernel_size': tune.choice([3, 4, 5])
+        # 'stride': tune.choice([2, 3, 4]),
+        # 'kernel_size': tune.choice([3, 4, 5])
     }
 
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    # train_tune(
-    #     {
-    #         **tunable_params,
-    #         'channels': get_channels()[0],
-    #         'optimiser': 'sgd',
-    #         'lr': 0.1,
-    #     } 
-    # )
+    train_tune(
+        {
+            **tunable_params,
+            # 'channels': get_channels()[0],
+            'optimiser': 'sgd',
+            'lr': 0.1,
+            # 'stride': 2,
+            # 'kernel_size': 3
+        } 
+    )
     
     result = tuner(
         train_tune, 

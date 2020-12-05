@@ -1,6 +1,7 @@
 from torch.utils.tensorboard import SummaryWriter
 import torch
 from time import time
+from architecture.get_channels import get_channels
 
 def visualise_reconstruction(writer, originals, reconstructions, label):
 
