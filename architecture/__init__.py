@@ -1,4 +1,5 @@
 from architecture.get_channels import get_channels
+import random
 
 def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_depth=4, channel_promotion_strategy='exponential'):
 
@@ -13,18 +14,22 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     to = round(0.2 * input_size)
     channels, kernel_sizes, strides = get_channels(input_size=28, output_dim=128, strat='from_to')
 
-    # calc_latent_size(input_size, channels, kernel_size, stride)
+    channels = random.choice(channels)
+    kernel_size = random.choice(kernel_sizes)
+    stride = random.choice(strides)
 
-    channel_sizes, remainders = calc_channel_size(28, channels, kernel_size, stride)
+    latent_dim = calc_latent_size(input_size, channels, kernel_size, stride)
+
+    channel_sizes, remainders = calc_channel_size(input_size, channels, kernel_size, stride)
     calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
-    output_padding = remainders[::-1], # need to reverse to mirror order of layers and apply matching
+    output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching
 
-    linear_layers = get_linear_layers(channels, latent_dim)
+    # linear_layers = get_linear_layers(channels, latent_dim)
+    linear_layers = []
 
 
     # return every possible
     ae_architecture = {
-        'output_padding': output_padding,
         'encoder_channels': channels,
         'encoder_linear_layers': linear_layers,
         'encoder_kernel_size': kernel_size,

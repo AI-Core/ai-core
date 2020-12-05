@@ -32,6 +32,7 @@ train_data, val_data, test_data = utils.get_splits()
 class ConvAutoencoder(torch.nn.Module):
     def __init__(
             self, 
+            input_size,
             encoder_channels,
             encoder_linear_layers,
             encoder_kernel_size,
@@ -41,7 +42,7 @@ class ConvAutoencoder(torch.nn.Module):
             decoder_kernel_size,
             decoder_stride,
             decoder_padding,
-            verbose=False
+            verbose=False,
         ):
         self.config = {
             'encoder_channels': encoder_channels,
@@ -54,6 +55,7 @@ class ConvAutoencoder(torch.nn.Module):
             'decoder_stride': decoder_stride,
             'decoder_padding': decoder_padding
         }
+        self.latent_dim = architecture.calc_latent_size(input_size, encoder_channels, encoder_kernel_size, encoder_stride)
         super().__init__()
         self.encoder = CNN(
             channels=encoder_channels, 
@@ -117,17 +119,17 @@ def on_epoch_end(model, writer, device, epoch):
 
 def train_tune(config):
 
-
         ae_arch = architecture.get_ae_architecture(
             input_size=28,
             latent_dim=128
         )
-        ae_arch = random.choice(ae_arch)
+        # ae_arch = random.choice(ae_arch) # randomly choose one of these
 
-        linear_layers = [1, 128]
-        linear_layers = []
+        # linear_layers = [1, 128]
+        # linear_layers = []
         # print('channels:', channels)
         model = ConvAutoencoder(
+            input_size=28,
             **ae_arch
             # encoder_channels=channels,
             # encoder_linear_layers=linear_layers,
@@ -142,10 +144,6 @@ def train_tune(config):
         )
         print(model.encoder.layers)
         print(model.decoder.layers)
-
-        latent_size = architecture.calc_latent_size(28, channels, kernel_size, stride)
-        model.latent_size = latent_size
-
 
         # config = {
         #     "lr": tune.qloguniform(1e-4, 1e-1, 0.0001),
