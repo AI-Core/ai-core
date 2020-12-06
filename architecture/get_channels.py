@@ -73,18 +73,18 @@ def get_channels(
                     # if kernel_size > last_channel_size: #if kernel too big to convolve
                     #     continue # continue to the next trial
 
-                    actual_latent_size = architecture.calc_latent_size(
+                    output_dim = architecture.calc_conv_output_dim(
                         input_size, 
                         test_channels, 
                         kernel_size, 
                         stride
                     )
 
-                    if actual_latent_size < kwargs['min_output_dim']:
+                    if output_dim < kwargs['min_output_dim']:
                         continue
                     
                     # print('calculated_latent_size', actual_latent_size)
-                    if  actual_latent_size > kwargs['output_dim']: #if this arch doesnt result in a latent size of near what we want
+                    if  output_dim > kwargs['output_dim']: #if this arch doesnt result in a latent size of near what we want
                         # print('not added to options')
                         continue # continue to the next trial without adding it to the options
                     else:

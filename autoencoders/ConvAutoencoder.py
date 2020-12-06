@@ -79,7 +79,8 @@ class ConvAutoencoder(torch.nn.Module):
         print(self.decoder.layers)
 
     def set_latent(self, input_size):
-        latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride'])
+        # latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride']) # if it has no linear layers
+        latent_size = self.config['encoder_linear_layers'][-1] #if it has linear layers in the middle
         self.latent_size = latent_size
 
     def encode(self, x):

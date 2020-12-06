@@ -21,7 +21,7 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     stride = strides[arch_idx]
 
 
-    conv_output_size = calc_latent_size(input_size, channels, kernel_size, stride)
+    conv_output_size = calc_conv_output_dim(input_size, channels, kernel_size, stride)
     # print('conv output dim:', conv_output_size)
 
     channel_sizes, remainders = calc_channel_size(input_size, channels, kernel_size, stride)
@@ -87,7 +87,11 @@ def calc_transpose_channel_size(w, channels, kernel_size, stride, padding):
         c.append(w)
     return c
 
-def calc_latent_size(w, channels, kernel_size, stride):
+# def calc_latent_size(w, channels, kernel_size, stride):
+#     calc_conv_output_dim()
+
+
+def calc_conv_output_dim(w, channels, kernel_size, stride):
     c, _ = calc_channel_size(w, channels, kernel_size, stride)
     final_channel_width = c[-1]
     latent_size = final_channel_width * final_channel_width * channels[-1]
