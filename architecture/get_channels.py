@@ -79,6 +79,9 @@ def get_channels(
                         kernel_size, 
                         stride
                     )
+
+                    if actual_latent_size < kwargs['min_output_dim']:
+                        continue
                     
                     # print('calculated_latent_size', actual_latent_size)
                     if  actual_latent_size > kwargs['output_dim']: #if this arch doesnt result in a latent size of near what we want
