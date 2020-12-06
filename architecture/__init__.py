@@ -22,17 +22,17 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
 
 
     conv_output_size = calc_latent_size(input_size, channels, kernel_size, stride)
-    print('conv output dim:', conv_output_size)
+    # print('conv output dim:', conv_output_size)
 
     channel_sizes, remainders = calc_channel_size(input_size, channels, kernel_size, stride)
     calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
     output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching
     # linear_layers = get_linear_layers(channels, latent_dim)
 
-    linear_layers = []
+    # linear_layers = []
     linear_layers = get_linear_layers(conv_output_size, latent_dim, layers=2)
-    print('linear_layers:', linear_layers)
-    scs
+    # print('linear_layers:', linear_layers)
+    # scs
     encoder_linear_layers = linear_layers
     decoder_linear_layers = linear_layers[::-1]
 

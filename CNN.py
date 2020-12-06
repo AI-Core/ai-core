@@ -20,8 +20,9 @@ class CNN(torch.nn.Module):
             )
             l.append(torch.nn.ReLU())   # activate
         for idx in range(len(linear_layers) - 1):
+            if idx == 0:
+                l.append(torch.nn.Flatten())
             l.extend([
-                torch.nn.Flatten(),
                 torch.nn.Linear(linear_layers[idx], linear_layers[idx + 1])
             ])
             if activate_last_linear or idx + 1 != len(linear_layers): # if this is not the last layer ( +1 = zero indexed) (-1 = layer b4 last)

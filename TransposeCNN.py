@@ -1,6 +1,8 @@
 import torch
 from VerboseLayer import VerboseLayer
 
+class Unflatten():
+
 class TransposeCNN(torch.nn.Module):
     def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, output_padding=None, verbose=False):
         super().__init__()
@@ -8,11 +10,12 @@ class TransposeCNN(torch.nn.Module):
 
         for idx in range(len(linear_layers) - 1):
             l.extend([
-                torch.nn.Flatten(),
                 torch.nn.Linear(linear_layers[idx], linear_layers[idx + 1])
             ])
             l.append(torch.nn.ReLU())   # activate
 
+            if idx == len(linear_layers) - 1: # at the end of the linear layers
+                l.append(Unflatten())# unflatten the example
 
         for idx in range(len(channels) - 1):
             l.append(
