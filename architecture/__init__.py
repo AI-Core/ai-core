@@ -36,17 +36,20 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     encoder_linear_layers = linear_layers
     decoder_linear_layers = linear_layers[::-1]
 
+    unflattened_size = (channels[-1], channel_sizes[-1], channel_sizes[-1])
+
     # return every possible
     ae_architecture = {
         'encoder_channels': channels,
-        'encoder_linear_layers': linear_layers,
+        'encoder_linear_layers': encoder_linear_layers,
         'encoder_kernel_size': kernel_size,
         'encoder_stride': stride,
         'decoder_channels': channels[::-1],
-        'decoder_linear_layers': linear_layers[::-1],
+        'decoder_linear_layers': decoder_linear_layers,
         'decoder_kernel_size': kernel_size,
         'decoder_stride': stride,
         'decoder_padding': output_padding,
+        'unflattened_size': unflattened_size,
         'verbose': False
     }
     return ae_architecture

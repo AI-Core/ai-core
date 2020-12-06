@@ -41,6 +41,7 @@ class ConvAutoencoder(torch.nn.Module):
             decoder_kernel_size,
             decoder_stride,
             decoder_padding,
+            unflattened_size,
             verbose=False,
         ):
         self.config = {
@@ -52,7 +53,8 @@ class ConvAutoencoder(torch.nn.Module):
             'decoder_linear_layers': decoder_linear_layers,
             'decoder_kernel_size': decoder_kernel_size,
             'decoder_stride': decoder_stride,
-            'decoder_padding': decoder_padding
+            'decoder_padding': decoder_padding,
+            'unflattened_size': unflattened_size
         }
         super().__init__()
         self.encoder = CNN(
@@ -69,6 +71,7 @@ class ConvAutoencoder(torch.nn.Module):
             kernel_size=decoder_kernel_size,
             stride=decoder_stride,
             output_padding=decoder_padding,
+            unflattened_size=unflattened_size,
             verbose=verbose
         )
         self.verbose = verbose
@@ -91,7 +94,6 @@ class ConvAutoencoder(torch.nn.Module):
             print('latent:', x.shape)
             print('calculated latent:', self.latent_size)
         x = self.decode(x)
-        ascsdc
         # scsz
         return x
 

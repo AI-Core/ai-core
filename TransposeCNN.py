@@ -1,10 +1,25 @@
 import torch
 from VerboseLayer import VerboseLayer
 
-class Unflatten():
+class Unflatten(torch.nn.Module):
+    def __init__(self, size):
+        super().__init__()
+        self.size = size
+
+    def forward(self, x):
+        return x.view(x.shape[0], *self.size)
 
 class TransposeCNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, output_padding=None, verbose=False):
+    def __init__(self, 
+            channels, 
+            linear_layers, 
+            kernel_size=3, 
+            stride=1, 
+            dropout=0.5, 
+            output_padding=None,
+            unflattened_size=None, # required to unflatten to a correct size
+            verbose=False
+        ):
         super().__init__()
         l = []
 
@@ -13,9 +28,10 @@ class TransposeCNN(torch.nn.Module):
                 torch.nn.Linear(linear_layers[idx], linear_layers[idx + 1])
             ])
             l.append(torch.nn.ReLU())   # activate
-
-            if idx == len(linear_layers) - 1: # at the end of the linear layers
-                l.append(Unflatten())# unflatten the example
+            # print(idx, len(linear_layers) - 1)
+            if idx + 1 == len(linear_layers) - 1: # at the end of the linear layers
+                print(unflattened_size)
+                l.append(Unflatten(unflattened_size))# unflatten the example
 
         for idx in range(len(channels) - 1):
             l.append(
