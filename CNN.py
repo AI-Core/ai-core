@@ -2,7 +2,7 @@ import torch
 from VerboseLayer import VerboseLayer
 
 class CNN(torch.nn.Module):
-    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, verbose=False):
+    def __init__(self, channels, linear_layers, kernel_size=3, stride=1, dropout=0.5, verbose=False, activate_last_linear=False):
         super().__init__()
         l = []
 
@@ -24,7 +24,7 @@ class CNN(torch.nn.Module):
                 torch.nn.Flatten(),
                 torch.nn.Linear(linear_layers[idx], linear_layers[idx + 1])
             ])
-            if idx + 1 != len(linear_layers): # if this is not the last layer ( +1 = zero indexed) (-1 = layer b4 last)
+            if activate_last_linear or idx + 1 != len(linear_layers): # if this is not the last layer ( +1 = zero indexed) (-1 = layer b4 last)
                 l.append(torch.nn.ReLU())   # activate
 
         self.layers = torch.nn.Sequential(

@@ -58,7 +58,7 @@ def get_channels(
         ) 
         for test_channels in test_channels_options:
             for stride in range(1, 5):
-                for kernel_size in [1, 2, 3, 4, 5, 7]:
+                for kernel_size in [2, 3, 4, 5, 7]:
                     channel_sizes, _ = architecture.calc_channel_size(
                         input_size,
                         test_channels,

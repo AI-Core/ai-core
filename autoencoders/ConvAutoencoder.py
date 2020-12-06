@@ -60,7 +60,8 @@ class ConvAutoencoder(torch.nn.Module):
             linear_layers=encoder_linear_layers,
             kernel_size=encoder_kernel_size,
             stride=encoder_stride,
-            verbose=verbose
+            verbose=verbose,
+            activate_last_linear=True
         )
         self.decoder = TransposeCNN(
             channels=decoder_channels, 
@@ -71,6 +72,8 @@ class ConvAutoencoder(torch.nn.Module):
             verbose=verbose
         )
         self.verbose = verbose
+        print(self.encoder.layers)
+        print(self.decoder.layers)
 
     def set_latent(self, input_size):
         latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride'])
@@ -88,6 +91,7 @@ class ConvAutoencoder(torch.nn.Module):
             print('latent:', x.shape)
             print('calculated latent:', self.latent_size)
         x = self.decode(x)
+        ascsdc
         # scsz
         return x
 
@@ -130,12 +134,10 @@ def train_tune(config):
             latent_dim=128
         )
         
-        # model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
-        model = ConvAutoencoder(**ae_arch)
+        model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
+        # model = ConvAutoencoder(**ae_arch)
 
         model.set_latent(input_size)
-        # print(model.encoder.layers)
-        # print(model.decoder.layers)
         # print('model latent dim:', model.latent_size)
 
         config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
@@ -180,16 +182,16 @@ if __name__ == '__main__':
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    # train_tune(
-    #     {
-    #         **tunable_params,
-    #         # 'channels': get_channels()[0],
-    #         'optimiser': 'sgd',
-    #         'lr': 0.1,
-    #         # 'stride': 2,
-    #         # 'kernel_size': 3
-    #     } 
-    # )
+    train_tune(
+        {
+            **tunable_params,
+            # 'channels': get_channels()[0],
+            'optimiser': 'sgd',
+            'lr': 0.1,
+            # 'stride': 2,
+            # 'kernel_size': 3
+        } 
+    )
     
     result = tuner(
         train_tune, 

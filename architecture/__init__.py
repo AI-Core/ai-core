@@ -11,24 +11,30 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     # kernel_size = config['kernel_size']
 
     _from = input_size
-    conv_output_dim = round(0.2 * input_size)
-    conv_output_dim = latent_dim
-    channels, kernel_sizes, strides = get_channels(input_size=input_size, output_dim=conv_output_dim, strat='from_to')
+    # conv_output_dim = round(0.2 * input_size)
+    max_conv_output_dim = 20*latent_dim
+    channels, kernel_sizes, strides = get_channels(input_size=input_size, output_dim=max_conv_output_dim, strat='from_to')
 
     arch_idx = random.choice(range(len(channels)))
     channels = channels[arch_idx]
     kernel_size = kernel_sizes[arch_idx]
     stride = strides[arch_idx]
 
-    latent_dim = calc_latent_size(input_size, channels, kernel_size, stride)
+
+    conv_output_size = calc_latent_size(input_size, channels, kernel_size, stride)
+    print('conv output dim:', conv_output_size)
 
     channel_sizes, remainders = calc_channel_size(input_size, channels, kernel_size, stride)
     calc_transpose_channel_size(channel_sizes[-1], channels[::-1], kernel_size, stride, remainders)
     output_padding = remainders[::-1] # need to reverse to mirror order of layers and apply matching
-
     # linear_layers = get_linear_layers(channels, latent_dim)
-    linear_layers = []
 
+    linear_layers = []
+    linear_layers = get_linear_layers(conv_output_size, latent_dim, layers=2)
+    print('linear_layers:', linear_layers)
+    scs
+    encoder_linear_layers = linear_layers
+    decoder_linear_layers = linear_layers[::-1]
 
     # return every possible
     ae_architecture = {
@@ -48,10 +54,10 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
 
 # automatically get the width
 # 
-def get_conv_architecture(input_size, output_size=[2, 3, 4]):
-    """
-    return an architecture required to reduce an input to a given dimensionality
-    """
+# def get_conv_architecture(input_size, output_size=[2, 3, 4]):
+#     """
+#     return an architecture required to reduce an input to a given dimensionality
+#     """
 
 
 def calc_channel_size(w, channels, kernel_size, stride):
@@ -85,5 +91,17 @@ def calc_latent_size(w, channels, kernel_size, stride):
     # print('latent size:', latent_size)
     return latent_size
 
-def get_linear_layers():
-    pass
+def get_linear_layers(input_size, output_size, layers=2, strat='linear'):
+    if strat == 'exponential':
+        pass
+    if strat == 'linear':
+        decrement = (input_size - output_size) / layers
+        linear_layers = [
+            input_size,
+            *[int(input_size - decrement * idx) for idx in range(1, layers)],
+            output_size
+        ]
+        print('linear_layers:', linear_layers)
+
+
+    return linear_layers
