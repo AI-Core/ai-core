@@ -158,7 +158,7 @@ def on_epoch_end(model, writer, device, epoch):
         break
     model.train()
 
-def train_tune(config):
+def trainable(config):
 
         input_size = 28
         ae_arch = architecture.get_ae_architecture(
@@ -175,16 +175,30 @@ def train_tune(config):
 
         config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
+        # SET UP LOGGER
+        section_name = 'ConvAutoencoder'
+        save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        experiment_name = f'ConvAutoencoder-{config_str}-{time()}'
         logger = pl.loggers.TensorBoardLogger(
-            save_dir=f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/',
-            name=f'ConvAutoencoder-{config_str}-{time()}',
-            default_hp_metric=False
+            save_dir=save_dir,
+            name=experiment_name,
+            default_hp_metric=False,
         )
+
+        # RUN TRAINER
         trainer = pl.Trainer(
             logger=logger,
-            log_every_n_steps=1
+            log_every_n_steps=1,
+            max_epochs=10
         )
         trainer.fit(model, train_loader)
+        test_result = Trainer.test(
+            model=model,
+            test_dataloaders=test_loader,
+            verbose=True
+        )
         # model, writer = train(
         #     model=model,
         #     model_class=ConvAutoencoder,
@@ -218,7 +232,7 @@ if __name__ == '__main__':
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    train_tune(
+    trainable(
         {
             **tunable_params,
             # 'channels': get_channels()[0],
@@ -230,7 +244,7 @@ if __name__ == '__main__':
     )
     dsds
     result = tuner(
-        train_tune, 
+        trainable, 
         tunable_params, 
         num_samples=20
     )
