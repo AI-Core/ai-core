@@ -17,6 +17,7 @@ import json
 from architecture import get_channels
 import architecture
 import random
+from time import time
 
 import os
 import torch
@@ -174,7 +175,15 @@ def train_tune(config):
 
         config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
-        trainer = pl.Trainer()
+        logger = pl.loggers.TensorBoardLogger(
+            save_dir=f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/',
+            name=f'ConvAutoencoder-{config_str}-{time()}',
+            default_hp_metric=False
+        )
+        trainer = pl.Trainer(
+            logger=logger,
+            log_every_n_steps=1
+        )
         trainer.fit(model, train_loader)
         # model, writer = train(
         #     model=model,
