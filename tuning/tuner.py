@@ -21,9 +21,11 @@ def tuner(trainable, tunable_params, num_samples=20):
             metric_columns=["loss", "training_iteration"]
         )
 
+        resources = {"cpu": 1, "gpu": 0.2} if torch.cuda.is_available() else {'cpu': 1}
+
         result = tune.run(
             trainable,
-            resources_per_trial={"cpu": 1, "gpu": 0.2},
+            resources_per_trial={"cpu": 1, "gpu": 0},
             config=tunable_params,
             num_samples=num_samples,
             scheduler=scheduler,

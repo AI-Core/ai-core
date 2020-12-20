@@ -29,6 +29,7 @@ from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
 from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
 from pytorch_lightning.callbacks import Callback
+from ReconstructionDataset import ReconstructionDataset
 
 batch_size = 16
 
@@ -134,23 +135,9 @@ class ConvAutoencoder(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
         return optimizer
 
-class AEDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset, transform=None):
-        self.dataset = dataset
-        self.transform = transform
-
-    def __getitem__(self, idx):
-        x, _ = self.dataset[idx]
-        if self.transform:
-            x = self.transform(x)
-        return (x, x)
-
-    def __len__(self):
-        return len(self.dataset)
-
-train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_size, num_workers=8)
-val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
-test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
+train_loader = DataLoader(ReconstructionDataset(train_data), shuffle=True, batch_size=batch_size, num_workers=8)
+val_loader = DataLoader(ReconstructionDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
+test_loader = DataLoader(ReconstructionDataset(test_data), shuffle=True, batch_size=batch_size)
 
 class SampleReconstructionCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module): # already in eval mode at this point
@@ -275,17 +262,17 @@ if __name__ == '__main__':
     # channels = get_channels()[0]
 
     # TEST FORWARD AND BACKWARD PASSES
-    trainable(
-        {
-            **tunable_params,
-            # 'channels': get_channels()[0],
-            # 'optimiser': 'sgd',
-            # 'lr': 0.1,
-            # 'stride': 2,
-            # 'kernel_size': 3
-        } 
-    )
-    dsds
+    # trainable(
+    #     {
+    #         **tunable_params,
+    #         # 'channels': get_channels()[0],
+    #         # 'optimiser': 'sgd',
+    #         # 'lr': 0.1,
+    #         # 'stride': 2,
+    #         # 'kernel_size': 3
+    #     } 
+    # )
+    # dsds
     result = tuner(
         trainable, 
         tunable_params, 
