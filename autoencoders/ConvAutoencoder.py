@@ -28,7 +28,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
 from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import Callback
 
 batch_size = 16
 
@@ -152,18 +152,19 @@ train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_
 val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
-def on_epoch_end(model, writer, device, epoch):
-    model.eval()
-    for batch in train_loader:
-        x, _ = batch
-        x = x.to(device)
-        model = model#.to('cpu')
-        reconstructions = model(x)
-        x = x.view(x.shape[0], 1, 28, 28)
-        reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
-        visualise_reconstruction(writer, x, reconstructions, f'epoch-{epoch}')
-        break
-    model.train()
+class SampleReconstructionCallback(Callback):
+    def on_validation_epoch_end(self, trainer, pl_module): # already in eval mode at this point
+        for batch in train_loader:
+            originals, _ = batch
+            reconstructions = pl_module(originals)
+            # x = x.view(x.shape[0], 1, 28, 28)
+            # reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
+            writer = pl_module.logger.experiment
+            writer.add_images(f'originals/{pl_module.experiment_name}', originals)
+            writer.add_images(f'reconstructions/{pl_module.experiment_name}', reconstructions)
+            # visualise_reconstruction(pl, x, reconstructions, f'epoch-{trainer.current_epoch}')
+            sfsd
+            break
 
 # def checkpointCallback():
 #         with tune.checkpoint_dir(epoch) as checkpoint_dir:
@@ -200,6 +201,7 @@ def trainable(config):
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         experiment_name = f'ConvAutoencoder-{config_str}-{time()}'
+        model.experiment_name = experiment_name
         logger = pl.loggers.TensorBoardLogger(
             save_dir=save_dir,
             name=experiment_name,
@@ -225,7 +227,8 @@ def trainable(config):
                     metrics={"loss": "val_loss"},
                     filename=f"{checkpoint_dir}/latest_checkpoint.ckpt", # TODO edit callback so that it saves history of checkpoints and make PR to ray[tune]
                     on="validation_end"
-                )
+                ),
+                SampleReconstructionCallback()
             ]
         )
         trainer.fit(model, 
