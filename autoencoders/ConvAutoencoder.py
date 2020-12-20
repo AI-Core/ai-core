@@ -194,6 +194,9 @@ def trainable(config):
 
         config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
+
+        # BELOW HERE SHOULD BE GENERIC TO ANY SYSTEM
+
         # SET UP LOGGER
         section_name = 'ConvAutoencoder'
         save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
@@ -237,20 +240,6 @@ def trainable(config):
             test_dataloaders=test_loader,
             verbose=True
         )
-        # model, writer = train(
-        #     model=model,
-        #     model_class=ConvAutoencoder,
-        #     optimiser=optimiser,
-        #     logdir='ConvAutoencoder',
-        #     config_str=config_str,
-        #     train_loader=train_loader,
-        #     val_loader=val_loader,
-        #     test_loader=test_loader,
-        #     loss_fn=F.mse_loss,
-        #     epochs=10,
-        #     on_epoch_end=on_epoch_end,
-        #     verbose=False
-        # )
 
 if __name__ == '__main__':
 
