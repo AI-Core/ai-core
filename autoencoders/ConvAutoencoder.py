@@ -27,7 +27,8 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
-from ray.tune.integration.pytorch_lightning import TuneReportCallback
+from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 batch_size = 16
 
@@ -118,7 +119,7 @@ class ConvAutoencoder(pl.LightningModule):
 
     def validation_step(self, *args):
         loss = self.training_step(*args)
-        return {'avg_val_loss': loss}
+        return {'val_loss': loss}
 
 
     def configure_optimizers(self):
@@ -164,6 +165,18 @@ def on_epoch_end(model, writer, device, epoch):
         break
     model.train()
 
+# def checkpointCallback():
+#         with tune.checkpoint_dir(epoch) as checkpoint_dir:
+#             path = os.path.join(checkpoint_dir, "checkpoint")
+#             # torch.save(model, path)
+#             torch.save((
+#                 model.state_dict(), 
+#                 model.config,
+#                 model.optimizer.state_dict()
+#             ), path)
+
+
+
 def trainable(config):
 
         input_size = 28
@@ -193,6 +206,14 @@ def trainable(config):
             default_hp_metric=False,
         )
 
+        # CREATE CHECKPOINT CALLBACK
+        # checkpoint_callback = ModelCheckpoint(
+        #     filepath='/path/to/store/weights.ckpt',
+        #     verbose=True,
+        #     monitor='val_loss',
+        #     mode='min'
+        # )
+
         # RUN TRAINER
         trainer = pl.Trainer(
             logger=logger,
@@ -201,8 +222,15 @@ def trainable(config):
             val_check_interval=0.05, # for dev
             callbacks=[
                 TuneReportCallback({
-                    "loss": "avg_val_loss",
-                }, on="validation_end"),
+                    "loss": "val_loss",
+                    }, 
+                    on="validation_end"
+                ),
+                TuneReportCheckpointCallback(
+                    metrics={"loss": "val_loss"},
+                    filename="trainer.ckpt", 
+                    on="validation_end"
+                )
             ]
         )
         trainer.fit(model, 
