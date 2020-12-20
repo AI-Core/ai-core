@@ -5,27 +5,8 @@ import torch
 # def tune_that_shit():
 
 
-def tuner(train, tunable_params, num_samples=20):
+def tuner(trainable, tunable_params, num_samples=20):
     # print(config)
-
-    # def wrapper(*args, config):
-
-
-        # def wrapit(train):
-        #     def wrapper(config):
-        #         train(fixed_params, **tunable_params)
-        #     return wrapper
-
-        # @wrapit
-        # def tune_that_shit(fixed_params, tunable_params):
-        #     train()
-
-            
-
-        # tune.report(
-        #     loss=val_loss / len(val_loader),
-        #     accuracy=correct / (len(val_loader) * batch_size)
-        # )
 
         scheduler = tune.schedulers.ASHAScheduler(
             metric="loss",
@@ -37,11 +18,11 @@ def tuner(train, tunable_params, num_samples=20):
 
         reporter = tune.CLIReporter(
             parameter_columns=list(tunable_params.keys()),
-            metric_columns=["loss", "accuracy", "training_iteration"]
+            metric_columns=["loss", "training_iteration"]
         )
 
         result = tune.run(
-            train,
+            trainable,
             resources_per_trial={"cpu": 1, "gpu": 0.2},
             config=tunable_params,
             num_samples=num_samples,

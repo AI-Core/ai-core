@@ -27,6 +27,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
+from ray.tune.integration.pytorch_lightning import TuneReportCallback
 
 batch_size = 16
 
@@ -115,6 +116,11 @@ class ConvAutoencoder(pl.LightningModule):
         self.log(self.logdir, loss)
         return loss
 
+    def validation_step(self, *args):
+        loss = self.training_step(*args)
+        return {'avg_val_loss': loss}
+
+
     def configure_optimizers(self):
 
         # if config['optimiser'] == 'sgd':
@@ -191,9 +197,18 @@ def trainable(config):
         trainer = pl.Trainer(
             logger=logger,
             log_every_n_steps=1,
-            max_epochs=10
+            max_epochs=10,
+            val_check_interval=0.05, # for dev
+            callbacks=[
+                TuneReportCallback({
+                    "loss": "avg_val_loss",
+                }, on="validation_end"),
+            ]
         )
-        trainer.fit(model, train_loader)
+        trainer.fit(model, 
+            train_dataloader=train_loader,
+            val_dataloaders=val_loader
+        )
         test_result = Trainer.test(
             model=model,
             test_dataloaders=test_loader,
