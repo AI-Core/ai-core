@@ -1,5 +1,5 @@
 import torch
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from time import time
 from ray import tune
 import os
@@ -77,9 +77,10 @@ def train(model, model_class, optimiser, logdir, config_str, train_loader, val_l
     # device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     # device = torch.device(device)
     model = model.to(device)
-
-    writer = SummaryWriter(log_dir=f'/home/ubuntu/ai-core/runs/{logdir}-{config_str}-{time()}')
-    writer.logdir = logdir
+    model.logdir = logdir
+    log_dir=f'{os.path.dirname(os.path.realpath(__file__))}/runs/{logdir}-{config_str}-{time()}'
+    # writer = SummaryWriter(log_dir)   
+    # writer.logdir = logdir
     batch_idx = 0
     # validate(model, val_loader, batch_idx, loss_fn, writer)
     for epoch in range(epochs):

@@ -18,6 +18,15 @@ from architecture import get_channels
 import architecture
 import random
 
+import os
+import torch
+from torch import nn
+import torch.nn.functional as F
+from torchvision import transforms
+from torchvision.datasets import MNIST
+from torch.utils.data import DataLoader, random_split
+import pytorch_lightning as pl
+
 batch_size = 16
 
 train_data, val_data, test_data = utils.get_splits()
@@ -29,7 +38,7 @@ train_data, val_data, test_data = utils.get_splits()
 #         print('yoooo')
 #         sssdfs
 
-class ConvAutoencoder(torch.nn.Module):
+class ConvAutoencoder(pl.LightningModule):
     def __init__(
             self, 
             encoder_channels,
@@ -98,6 +107,25 @@ class ConvAutoencoder(torch.nn.Module):
         # scsz
         return x
 
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        pred = self.decoder(self.encoder(x))
+        loss = F.mse_loss(pred, y)
+        self.log(self.logdir, loss)
+        return loss
+
+    def configure_optimizers(self):
+
+        # if config['optimiser'] == 'sgd':
+        #     optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
+        # elif config['optimiser'] == 'adam':
+        #     optimiser = torch.optim.Adam(model.parameters(), lr=config['lr'])
+        # else:
+        #     raise ValueError('Optimiser not specified in tuner config')
+
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+        return optimizer
+
 class AEDataset(torch.utils.data.Dataset):
     def __init__(self, dataset, transform=None):
         self.dataset = dataset
@@ -112,8 +140,8 @@ class AEDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
-train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_size)
-val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size)
+train_loader = DataLoader(AEDataset(train_data), shuffle=True, batch_size=batch_size, num_workers=8)
+val_loader = DataLoader(AEDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
 test_loader = DataLoader(AEDataset(test_data), shuffle=True, batch_size=batch_size)
 
 def on_epoch_end(model, writer, device, epoch):
@@ -137,35 +165,31 @@ def train_tune(config):
             latent_dim=128
         )
         
-        model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
-        # model = ConvAutoencoder(**ae_arch)
+        # model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
+        model = ConvAutoencoder(**ae_arch)
+        model.logdir = 'ConvAutoencoder'
 
         model.set_latent(input_size)
         # print('model latent dim:', model.latent_size)
 
         config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
-        if config['optimiser'] == 'sgd':
-            optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
-        elif config['optimiser'] == 'adam':
-            optimiser = torch.optim.Adam(model.parameters(), lr=config['lr'])
-        else:
-            raise ValueError('Optimiser not specified in tuner config')
-
-        model, writer = train(
-            model=model,
-            model_class=ConvAutoencoder,
-            optimiser=optimiser,
-            logdir='ConvAutoencoder',
-            config_str=config_str,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            test_loader=test_loader,
-            loss_fn=F.mse_loss,
-            epochs=10,
-            on_epoch_end=on_epoch_end,
-            verbose=False
-        )
+        trainer = pl.Trainer()
+        trainer.fit(model, train_loader)
+        # model, writer = train(
+        #     model=model,
+        #     model_class=ConvAutoencoder,
+        #     optimiser=optimiser,
+        #     logdir='ConvAutoencoder',
+        #     config_str=config_str,
+        #     train_loader=train_loader,
+        #     val_loader=val_loader,
+        #     test_loader=test_loader,
+        #     loss_fn=F.mse_loss,
+        #     epochs=10,
+        #     on_epoch_end=on_epoch_end,
+        #     verbose=False
+        # )
 
 if __name__ == '__main__':
 
@@ -176,8 +200,8 @@ if __name__ == '__main__':
     # sdf
     tunable_params = {
         # 'channels': tune.choice(get_channels()),
-        'optimiser': tune.choice(['adam', 'sgd']),
-        'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
+        # 'optimiser': tune.choice(['adam', 'sgd']),
+        # 'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
         # 'stride': tune.choice([2, 3, 4]),
         # 'kernel_size': tune.choice([3, 4, 5])
     }
@@ -189,13 +213,13 @@ if __name__ == '__main__':
         {
             **tunable_params,
             # 'channels': get_channels()[0],
-            'optimiser': 'sgd',
-            'lr': 0.1,
+            # 'optimiser': 'sgd',
+            # 'lr': 0.1,
             # 'stride': 2,
             # 'kernel_size': 3
         } 
     )
-    
+    dsds
     result = tuner(
         train_tune, 
         tunable_params, 
