@@ -206,13 +206,9 @@ def trainable(config):
             default_hp_metric=False,
         )
 
-        # CREATE CHECKPOINT CALLBACK
-        # checkpoint_callback = ModelCheckpoint(
-        #     filepath='/path/to/store/weights.ckpt',
-        #     verbose=True,
-        #     monitor='val_loss',
-        #     mode='min'
-        # )
+        # CREATE CHECKPOINTS DIR
+        checkpoint_dir = f'checkpoints/{experiment_name}'
+        os.makedirs(checkpoint_dir)
 
         # RUN TRAINER
         trainer = pl.Trainer(
@@ -221,14 +217,13 @@ def trainable(config):
             max_epochs=10,
             val_check_interval=0.05, # for dev
             callbacks=[
-                TuneReportCallback({
-                    "loss": "val_loss",
-                    }, 
+                TuneReportCallback(
+                    metrics={"loss": "val_loss",},
                     on="validation_end"
                 ),
                 TuneReportCheckpointCallback(
                     metrics={"loss": "val_loss"},
-                    filename="trainer.ckpt", 
+                    filename=f"{checkpoint_dir}/latest_checkpoint.ckpt", # TODO edit callback so that it saves history of checkpoints and make PR to ray[tune]
                     on="validation_end"
                 )
             ]
