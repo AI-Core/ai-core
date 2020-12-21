@@ -142,18 +142,18 @@ test_loader = DataLoader(ReconstructionDataset(test_data), shuffle=True, batch_s
 class SampleReconstructionCallback(Callback):
     def on_validation_epoch_end(self, trainer, pl_module): # already in eval mode at this point
         for batch in train_loader:
-            originals, _ = batch
-            originals = originals[:8]
-            reconstructions = pl_module(originals)
-            # x = x.view(x.shape[0], 1, 28, 28)
-            # reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
-            imgs = torch.cat((originals, reconstructions), 0)
-            writer = pl_module.logger.experiment
-            # writer.add_images(f'originals/{pl_module.experiment_name}', originals)
-            # writer.add_images(f'reconstructions/{pl_module.experiment_name}', reconstructions)
-            writer.add_images(f'reconstructions/{pl_module.experiment_name}', imgs)
-            # visualise_reconstruction(pl, x, reconstructions, f'epoch-{trainer.current_epoch}')
             break
+        originals, _ = batch
+        originals = originals[:8]
+        reconstructions = pl_module(originals)
+        # x = x.view(x.shape[0], 1, 28, 28)
+        # reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
+        imgs = torch.cat((originals, reconstructions), 0)
+        writer = pl_module.logger.experiment
+        # writer.add_images(f'originals/{pl_module.experiment_name}', originals)
+        # writer.add_images(f'reconstructions/{pl_module.experiment_name}', reconstructions)
+        writer.add_images(f'reconstructions/{pl_module.experiment_name}', imgs)
+        # visualise_reconstruction(pl, x, reconstructions, f'epoch-{trainer.current_epoch}')
 
 # def checkpointCallback():
 #         with tune.checkpoint_dir(epoch) as checkpoint_dir:
@@ -186,9 +186,14 @@ def trainable(config):
 
         # SET UP LOGGER
         section_name = 'ConvAutoencoder'
-        save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
+        save_dir =f'{os.path.expanduser("~")}/ai-core/Embedder/runs/{section_name}/'
+        # save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
+        # print(save_dir)
+        # print(__name__)
+        # print(__file__)
+        # sdfcds
         experiment_name = f'ConvAutoencoder-{config_str}-{time()}'
         model.experiment_name = experiment_name
         logger = pl.loggers.TensorBoardLogger(
@@ -207,6 +212,7 @@ def trainable(config):
             log_every_n_steps=1,
             max_epochs=10,
             val_check_interval=0.05, # for dev
+            progress_bar_refresh_rate=0,
             callbacks=[
                 TuneReportCallback(
                     metrics={"loss": "val_loss",},
