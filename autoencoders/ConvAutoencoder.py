@@ -139,21 +139,6 @@ train_loader = DataLoader(ReconstructionDataset(train_data), shuffle=True, batch
 val_loader = DataLoader(ReconstructionDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
 test_loader = DataLoader(ReconstructionDataset(test_data), shuffle=True, batch_size=batch_size)
 
-class SampleReconstructionCallback(Callback):
-    def on_validation_epoch_end(self, trainer, pl_module): # already in eval mode at this point
-        for batch in train_loader:
-            break
-        originals, _ = batch
-        originals = originals[:8]
-        reconstructions = pl_module(originals)
-        # x = x.view(x.shape[0], 1, 28, 28)
-        # reconstructions = reconstructions.view(reconstructions.shape[0], 1, 28, 28)
-        imgs = torch.cat((originals, reconstructions), 0)
-        writer = pl_module.logger.experiment
-        # writer.add_images(f'originals/{pl_module.experiment_name}', originals)
-        # writer.add_images(f'reconstructions/{pl_module.experiment_name}', reconstructions)
-        writer.add_images(f'reconstructions/{pl_module.experiment_name}', imgs)
-        # visualise_reconstruction(pl, x, reconstructions, f'epoch-{trainer.current_epoch}')
 
 # def checkpointCallback():
 #         with tune.checkpoint_dir(epoch) as checkpoint_dir:
