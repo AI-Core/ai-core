@@ -54,6 +54,22 @@ def get_ae_architecture(input_size, latent_dim=128, encoder_depth=3, decoder_dep
     }
     return ae_architecture
 
+def get_vae_architecture(**kwargs):
+    ae_architecture = get_ae_architecture(**kwargs)
+    vae_arch = {
+        **ae_architecture,
+        'encoder_linear_layers': get_linear_layers(
+            input_size=calc_conv_output_dim(
+                kwargs['input_size'], 
+                ae_architecture['encoder_channels'], 
+                ae_architecture['encoder_kernel_size'], 
+                ae_architecture['encoder_stride']
+            ),
+            output_size=2 * kwargs['latent_dim'], # needs to be twice as big for VAE as AE to sample both mean and variance
+            layers=2
+        )
+    }
+    return vae_arch
 
 # automatically get the width
 # 
