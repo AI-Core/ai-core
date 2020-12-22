@@ -32,17 +32,6 @@ from pytorch_lightning.callbacks import Callback
 from ReconstructionDataset import ReconstructionDataset
 from autoencoders.callbacks import SampleReconstructionCallback
 
-batch_size = 16
-
-train_data, val_data, test_data = utils.get_splits()
-
-# class AiCoreModel(torch.nn.Module):
-#     def __init__(self, **kwargs):
-#         super().__init__()
-#         print(kwargs)
-#         print('yoooo')
-#         sssdfs
-
 class ConvAutoencoder(pl.LightningModule):
     def __init__(
             self, 
@@ -56,6 +45,8 @@ class ConvAutoencoder(pl.LightningModule):
             decoder_stride,
             decoder_padding,
             unflattened_size,
+            optimizer_name=None,
+            lr=None,
             verbose=False,
         ):
         self.config = {
@@ -68,7 +59,9 @@ class ConvAutoencoder(pl.LightningModule):
             'decoder_kernel_size': decoder_kernel_size,
             'decoder_stride': decoder_stride,
             'decoder_padding': decoder_padding,
-            'unflattened_size': unflattened_size
+            'unflattened_size': unflattened_size,
+            'optimizer_name': optimizer_name,
+            'lr': lr
         }
         super().__init__()
         self.encoder = CNN(
@@ -123,130 +116,119 @@ class ConvAutoencoder(pl.LightningModule):
         loss = self.training_step(*args)
         return {'val_loss': loss}
 
-
     def configure_optimizers(self):
 
-        # if config['optimiser'] == 'sgd':
-        #     optimiser = torch.optim.SGD(model.parameters(), lr=config['lr'])
-        # elif config['optimiser'] == 'adam':
-        #     optimiser = torch.optim.Adam(model.parameters(), lr=config['lr'])
-        # else:
-        #     raise ValueError('Optimiser not specified in tuner config')
+        if self.config['optimizer_name'] == 'sgd':
+            optimizer = torch.optim.SGD(self.parameters(), lr=self.config['lr'])
+        elif self.config['optimizer_name'] == 'adam':
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.config['lr'])
+        else:
+            raise ValueError('Optimizer not specified in tuner config')
 
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+        # optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
         return optimizer
 
-train_loader = DataLoader(ReconstructionDataset(train_data), shuffle=True, batch_size=batch_size, num_workers=8)
-val_loader = DataLoader(ReconstructionDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
-test_loader = DataLoader(ReconstructionDataset(test_data), shuffle=True, batch_size=batch_size)
+def trainable(config, train_loader, val_loader, test_loader):
 
+    input_size = 28
+    ae_arch = architecture.get_ae_architecture(
+        input_size=input_size,
+        latent_dim=128
+    )
+    
+    # model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
+    model = ConvAutoencoder(**{**ae_arch, 'optimizer_name': config['optimizer_name'], 'lr': config['lr']})
+    model.logdir = 'ConvAutoencoder'
 
-# def checkpointCallback():
-#         with tune.checkpoint_dir(epoch) as checkpoint_dir:
-#             path = os.path.join(checkpoint_dir, "checkpoint")
-#             # torch.save(model, path)
-#             torch.save((
-#                 model.state_dict(), 
-#                 model.config,
-#                 model.optimizer.state_dict()
-#             ), path)
+    model.set_latent(input_size)
+    # print('model latent dim:', model.latent_size)
 
+    config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
 
+    # SET UP LOGGER
+    section_name = 'ConvAutoencoder'
+    save_dir =f'{os.path.expanduser("~")}/ai-core/Embedder/runs/{section_name}/'
+    # save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    # print(save_dir)
+    # print(__name__)
+    # print(__file__)
+    # sdfcds
+    experiment_name = f'ConvAutoencoder-{config_str}-{time()}'
+    model.experiment_name = experiment_name
+    logger = pl.loggers.TensorBoardLogger(
+        save_dir=save_dir,
+        name=experiment_name,
+        default_hp_metric=False,
+    )
 
-def trainable(config):
+    # CREATE CHECKPOINTS DIR
+    checkpoint_dir = f'checkpoints/{experiment_name}'
+    os.makedirs(checkpoint_dir)
 
-        input_size = 28
-        ae_arch = architecture.get_ae_architecture(
-            input_size=input_size,
-            latent_dim=128
-        )
-        
-        # model = ConvAutoencoder(**{**ae_arch, 'verbose': True})
-        model = ConvAutoencoder(**ae_arch)
-        model.logdir = 'ConvAutoencoder'
-
-        model.set_latent(input_size)
-        # print('model latent dim:', model.latent_size)
-
-        config_str = json.dumps({**config, 'channels': ae_arch['encoder_channels'], 'stride': ae_arch['encoder_stride'], 'kernel_size': ae_arch['encoder_kernel_size'], 'latent_dim': model.latent_size})
-
-        # SET UP LOGGER
-        section_name = 'ConvAutoencoder'
-        save_dir =f'{os.path.expanduser("~")}/ai-core/Embedder/runs/{section_name}/'
-        # save_dir =f'{os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")}/runs/{section_name}/'
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-        # print(save_dir)
-        # print(__name__)
-        # print(__file__)
-        # sdfcds
-        experiment_name = f'ConvAutoencoder-{config_str}-{time()}'
-        model.experiment_name = experiment_name
-        logger = pl.loggers.TensorBoardLogger(
-            save_dir=save_dir,
-            name=experiment_name,
-            default_hp_metric=False,
-        )
-
-        # CREATE CHECKPOINTS DIR
-        checkpoint_dir = f'checkpoints/{experiment_name}'
-        os.makedirs(checkpoint_dir)
-
-        # RUN TRAINER
-        trainer = pl.Trainer(
-            logger=logger,
-            log_every_n_steps=1,
-            max_epochs=10,
-            val_check_interval=0.05, # for dev
-            progress_bar_refresh_rate=0,
-            callbacks=[
-                TuneReportCallback(
-                    metrics={"loss": "val_loss",},
-                    on="validation_end"
-                ),
-                TuneReportCheckpointCallback(
-                    metrics={"loss": "val_loss"},
-                    filename=f"{checkpoint_dir}/latest_checkpoint.ckpt", # TODO edit callback so that it saves history of checkpoints and make PR to ray[tune]
-                    on="validation_end"
-                ),
-                SampleReconstructionCallback()
-            ]
-        )
-        trainer.fit(model, 
-            train_dataloader=train_loader,
-            val_dataloaders=val_loader
-        )
-        test_result = Trainer.test(
-            model=model,
-            test_dataloaders=test_loader,
-            verbose=True
-        )
-        # model, writer = train(
-        #     model=model,
-        #     model_class=ConvAutoencoder,
-        #     optimiser=optimiser,
-        #     logdir='ConvAutoencoder',
-        #     config_str=config_str,
-        #     train_loader=train_loader,
-        #     val_loader=val_loader,
-        #     test_loader=test_loader,
-        #     loss_fn=F.mse_loss,
-        #     epochs=10,
-        #     on_epoch_end=on_epoch_end,
-        #     verbose=False
-        # )
+    # RUN TRAINER
+    trainer = pl.Trainer(
+        logger=logger,
+        log_every_n_steps=1,
+        max_epochs=10,
+        val_check_interval=0.05, # for dev
+        progress_bar_refresh_rate=0,
+        callbacks=[
+            TuneReportCallback(
+                metrics={"loss": "val_loss",},
+                on="validation_end"
+            ),
+            TuneReportCheckpointCallback(
+                metrics={"loss": "val_loss"},
+                filename=f"{checkpoint_dir}/latest_checkpoint.ckpt", # TODO edit callback so that it saves history of checkpoints and make PR to ray[tune]
+                on="validation_end"
+            ),
+            SampleReconstructionCallback(loader=val_loader)
+        ]
+    )
+    trainer.fit(model, 
+        train_dataloader=train_loader,
+        val_dataloaders=val_loader
+    )
+    test_result = Trainer.test(
+        model=model,
+        test_dataloaders=test_loader,
+        verbose=True
+    )
+    # model, writer = train(
+    #     model=model,
+    #     model_class=ConvAutoencoder,
+    #     optimiser=optimiser,
+    #     logdir='ConvAutoencoder',
+    #     config_str=config_str,
+    #     train_loader=train_loader,
+    #     val_loader=val_loader,
+    #     test_loader=test_loader,
+    #     loss_fn=F.mse_loss,
+    #     epochs=10,
+    #     on_epoch_end=on_epoch_end,
+    #     verbose=False
+    # )
 
 if __name__ == '__main__':
 
     # print(get_channels())
+    batch_size = 16
+
+    train_data, val_data, test_data = utils.get_splits()
+    train_loader = DataLoader(ReconstructionDataset(train_data), shuffle=True, batch_size=batch_size, num_workers=8)
+    val_loader = DataLoader(ReconstructionDataset(val_data), shuffle=True, batch_size=batch_size, num_workers=8)
+    test_loader = DataLoader(ReconstructionDataset(test_data), shuffle=True, batch_size=batch_size)
+
 
     stride = 2
     kernel_size = 4
     # sdf
     tunable_params = {
         # 'channels': tune.choice(get_channels()),
-        # 'optimiser': tune.choice(['adam', 'sgd']),
-        # 'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
+        'optimizer_name': tune.choice(['adam', 'sgd']),
+        'lr': tune.choice([10**(-idx) for idx in range(1, 5)]),
         # 'stride': tune.choice([2, 3, 4]),
         # 'kernel_size': tune.choice([3, 4, 5])
     }
@@ -266,9 +248,14 @@ if __name__ == '__main__':
     # )
     # dsds
     result = tuner(
-        trainable, 
+        tune.with_parameters(
+            trainable,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            test_loader=test_loader
+        ),
         tunable_params, 
-        num_samples=20
+        num_samples=1
     )
             
     best_trial = result.get_best_trial("loss", "min", "last")
