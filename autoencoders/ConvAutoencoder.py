@@ -87,7 +87,7 @@ class ConvAutoencoder(pl.LightningModule):
 
     def set_latent(self, input_size):
         # latent_size = architecture.calc_latent_size(input_size, self.config['encoder_channels'], self.config['encoder_kernel_size'], self.config['encoder_stride']) # if it has no linear layers
-        latent_size = self.config['encoder_linear_layers'][-1] #if it has linear layers in the middle
+        latent_size = self.config['decoder_linear_layers'][0] # if it has linear layers in the middle (had to use the decoder rather than encoder becuase for VAE encoder last layer=2*latent_dim)
         self.latent_size = latent_size
 
     def encode(self, x):
