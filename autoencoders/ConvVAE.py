@@ -4,11 +4,8 @@ from ConvAutoencoder import ConvAutoencoder
 import numpy as np
 import torch.nn.functional as F
 
-def dkl(mu, logvar):
-
-    kl_diverge = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
-    return kl_diverge
-
+def D_KL(mu, logvar):
+    return -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
 class ConvVAE(ConvAutoencoder):
     def __init__(
@@ -27,40 +24,58 @@ class ConvVAE(ConvAutoencoder):
         logvar_z = dist_params[:, self.latent_size:] # variance cannot be negative, so assume that this is the log of it which can be negative
         # print('dist params shape:', dist_params.shape)
         # print('latent size:', self.latent_size)
-        # REPARAMETERISATION TRICK
         # print('epsilon shape:', torch.randn_like(mu_z).shape)
         # print('logvar shape:', logvar_z.shape)
+
+        # REPARAMETERISATION TRICK
         z = mu_z + torch.randn_like(mu_z) * logvar_z # element wise random sample
 
+        # mu_z = torch.ones_like(mu_z) * 0.3
+        # logvar_z = torch.log(torch.ones_like(mu_z) * 1)
+        # z = torch.ones_like(mu_z) * 1
 
-        Q = Gaussian(mu=mu_z, sigma=torch.exp(logvar_z))
-        print()
-        z = torch.zeros_like(z)
-        print('z')
-        print(z)
-        print()
-        print('Q(z):', Q(z))
-        print()
-        print('log(Q(z)):', torch.log(Q(z)))
-        print()
+        sigma = np.sqrt(torch.exp(logvar_z))
+        Q = Gaussian(mu=mu_z, sigma=sigma)
+        # print()
+        # print('z')
+        # print(z)
+        # print()
+        # print('Q(z):', Q(z))
+        # print()
+        # print('log(Q(z)):', torch.log(Q(z)))
+        # print()
         # print('prior:', self.prior(z))
 
-        kl_loss = F.kl_div(torch.log(Q(z)), self.prior(z))
-        print('pt kl_loss:', kl_loss)
-        print('my kl_loss:', dkl(mu_z, logvar_z))
-        print(batch_size*dkl(mu_z, logvar_z))
-        assert kl_loss == dkl(mu_z, logvar_z)
+        # log_prob_z = torch.log(Q(z))
+        # kl_loss = F.kl_div(log_prob_z, self.prior(z), reduction='batchmean')
+        my_kl = D_KL(mu_z, logvar_z)
+        # print('pt kl_loss:', kl_loss)
+        # print('my kl_loss:', my_kl)
 
-        return z
+        # assert kl_loss == D_KL(mu_z, logvar_z)
+
+        return z, mu_z, logvar_z
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        z = self.encode(x) # the latent representation, which is equivalent to a vector of log probabilities of each latent feature
+        z, mu, logvar = self.encode(x) # the latent representation, which is equivalent to a vector of log probabilities of each latent feature
+
+        print(z)
         pred = self.decode(z)
         loss = F.mse_loss(pred, y)
-        loss += self.beta * F.kl_div(z, self.prior(z))
+        loss += self.beta * D_KL(mu, logvar)
         self.log(self.logdir, loss)
         return loss
+
+    def validation_step(self, *args):
+        print()
+        print()
+        print(type(args))
+        print(len(args))
+
+        # print('args:', args)
+        loss = self.training_step(*args)
+        return {'val_loss': loss}
 
 class Gaussian():
     def __init__(self, mu=0, sigma=1):
