@@ -30,6 +30,7 @@ import pytorch_lightning as pl
 from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
 from pytorch_lightning.callbacks import Callback
 from ReconstructionDataset import ReconstructionDataset
+from autoencoders.callbacks import SampleReconstructionCallback
 
 batch_size = 16
 
