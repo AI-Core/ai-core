@@ -7,6 +7,16 @@ import torch.nn.functional as F
 def D_KL(mu, logvar):
     return -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
 
+def KLDivergence(q_x, p_x):
+    print(q_x.shape)
+    print(p_x.shape)
+    assert q_x.shape == p_x.shape
+    d = torch.log(q_x / p_x)
+    d *= q_x
+    d = torch.mean(d)
+    d *= -1
+    return d
+
 class ConvVAE(ConvAutoencoder):
     def __init__(
         self,
@@ -21,7 +31,7 @@ class ConvVAE(ConvAutoencoder):
     def encode(self, x):
         dist_params = self.encoder(x) # has size 2*latent_dim
         mu_z = dist_params[:, :self.latent_size] # first half of the vector is the means of the latent vars, second half is the log of the variances
-        logvar_z = dist_params[:, self.latent_size:] # variance cannot be negative, so assume that this is the log of it which can be negative
+        logvar_z = dist_params[:, self.latent_size:] # variance cannot be negative, so assume that this is the log of it, which can be negative
         # print('dist params shape:', dist_params.shape)
         # print('latent size:', self.latent_size)
         # print('epsilon shape:', torch.randn_like(mu_z).shape)
@@ -30,9 +40,9 @@ class ConvVAE(ConvAutoencoder):
         # REPARAMETERISATION TRICK
         z = mu_z + torch.randn_like(mu_z) * logvar_z # element wise random sample
 
-        # mu_z = torch.ones_like(mu_z) * 0.3
-        # logvar_z = torch.log(torch.ones_like(mu_z) * 1)
-        # z = torch.ones_like(mu_z) * 1
+        mu_z = torch.ones_like(mu_z) * 0.3
+        logvar_z = torch.log(torch.ones_like(mu_z) * 0.3)
+        # z = torch.ones_like(mu_z) * 0
 
         sigma = np.sqrt(torch.exp(logvar_z))
         Q = Gaussian(mu=mu_z, sigma=sigma)
@@ -46,19 +56,21 @@ class ConvVAE(ConvAutoencoder):
         # print()
         # print('prior:', self.prior(z))
 
-        # log_prob_z = torch.log(Q(z))
-        # kl_loss = F.kl_div(log_prob_z, self.prior(z), reduction='batchmean')
-        my_kl = D_KL(mu_z, logvar_z)
-        # print('pt kl_loss:', kl_loss)
-        # print('my kl_loss:', my_kl)
+        log_prob_z = torch.log(Q(z))
+        pt_loss = F.kl_div(log_prob_z, self.prior(z), reduction='mean')
+        my_loss = KLDivergence(Q(z), self.prior(z))
+        foss_kl = D_KL(mu_z, logvar_z)
+        print('my kl_loss:', my_loss)
+        print('FOSS kl_loss:', foss_kl)
+        # print('pt loss:', pt_loss)
 
-        # assert kl_loss == D_KL(mu_z, logvar_z)
-
-        return z, mu_z, logvar_z
+        assert foss_kl.item() - my_loss.item() < 0.0000001
+        csd
+        return z
 
     def training_step(self, batch, batch_idx):
         x, y = batch
-        z, mu, logvar = self.encode(x) # the latent representation, which is equivalent to a vector of log probabilities of each latent feature
+        z = self.encode(x) # the latent representation, which is equivalent to a vector of log probabilities of each latent feature
 
         print(z)
         pred = self.decode(z)
