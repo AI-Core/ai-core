@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import nn
 import torchvision
+from time import sleep
 
 batch_size = 32
 nc = 3 # Number of channels in the training images. For color images this is 3
 nz = 100 # Size of z latent vector (i.e. size of generator input)
 ngf = 64 # Size of feature maps in generator
 ndf = 64 # Size of feature maps in discriminator
-num_epochs = 100 # Number of training epochs
 lr = 0.0002 # Learning rate for torch.optimizers
 beta1 = 0.5 # Beta1 hyperparam for Adam torch.optimizers
 # Number of GPUs available. Use 0 for CPU mode.
@@ -88,36 +88,40 @@ class Discriminator(nn.Module):
 
 class GAN:
     def __init__(self):
-        pass
-    def fit(self):
-        # Create the generator
-        netG = Generator(ngpu).to(device)
-
+        self.G = Generator(ngpu).to(device)
         # Handle multi-gpu if desired
         if (device.type == 'cuda') and (ngpu > 1):
-            netG = nn.DataParallel(netG, list(range(ngpu)))
+            self.G = nn.DataParallel(self.G, list(range(ngpu)))
 
         # Apply the weights_init function to randomly initialize all weights
         #  to mean=0, stdev=0.2.
-        netG.apply(weights_init)
+        self.G.apply(weights_init)
 
         # Print the model
-        print(netG)
+        print(self.G)
 
         # Create the Discriminator
-        netD = Discriminator(ngpu).to(device)
+        self.D = Discriminator(ngpu).to(device)
 
         # Handle multi-gpu if desired
         if (device.type == 'cuda') and (ngpu > 1):
-            netD = nn.DataParallel(netD, list(range(ngpu)))
+            self.D = nn.DataParallel(self.D, list(range(ngpu)))
 
         # Apply the weights_init function to randomly initialize all weights
         #  to mean=0, stdev=0.2.
-        netD.apply(weights_init)
+        self.D.apply(weights_init)
 
         # Print the model
-        print(netD)
+        print(self.D)
 
+
+    def sample(self):
+        noise = torch.randn(b_size, nz, 1, 1, device=device)
+        # Generate fake image batch with G
+        fake = self.G(noise)
+        return fake
+
+    def fit(self, epochs=10):
         # Initialize BCELoss function
         criterion = nn.BCELoss()
 
@@ -130,8 +134,8 @@ class GAN:
         fake_label = 0.
 
         # Setup Adam torch.optimizers for both G and D
-        torch.optimizerD = torch.optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
-        torch.optimizerG = torch.optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+        torch.optimizerD = torch.optim.Adam(self.D.parameters(), lr=lr, betas=(beta1, 0.999))
+        torch.optimizerG = torch.optim.Adam(self.G.parameters(), lr=lr, betas=(beta1, 0.999))
         
         img_list = []
         G_losses = []
@@ -140,7 +144,7 @@ class GAN:
 
         print("Starting Training Loop...")
         # For each epoch
-        for epoch in range(num_epochs):
+        for epoch in range(epochs):
             # For each batch in the dataloader
             for i, data in enumerate(dataloader, 0):
 
@@ -148,13 +152,13 @@ class GAN:
                 # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
                 ###########################
                 ## Train with all-real batch
-                netD.zero_grad()
+                self.D.zero_grad()
                 # Format batch
                 real_cpu = data[0].to(device)
                 b_size = real_cpu.size(0)
                 label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
                 # Forward pass real batch through D
-                output = netD(real_cpu).view(-1)
+                output = self.D(real_cpu).view(-1)
                 # Calculate loss on all-real batch
                 errD_real = criterion(output, label)
                 # Calculate gradients for D in backward pass
@@ -165,10 +169,10 @@ class GAN:
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
                 # Generate fake image batch with G
-                fake = netG(noise)
+                fake = self.G(noise)
                 label.fill_(fake_label)
                 # Classify all fake batch with D
-                output = netD(fake.detach()).view(-1)
+                output = self.D(fake.detach()).view(-1)
                 # Calculate D's loss on the all-fake batch
                 errD_fake = criterion(output, label)
                 # Calculate the gradients for this batch
@@ -182,10 +186,10 @@ class GAN:
                 ############################
                 # (2) Update G network: maximize log(D(G(z)))
                 ###########################
-                netG.zero_grad()
+                self.G.zero_grad()
                 label.fill_(real_label)  # fake labels are real for generator cost
                 # Since we just updated D, perform another forward pass of all-fake batch through D
-                output = netD(fake).view(-1)
+                output = self.D(fake).view(-1)
                 # Calculate G's loss based on this output
                 errG = criterion(output, label)
                 # Calculate gradients for G
@@ -197,7 +201,7 @@ class GAN:
                 # Output training stats
                 if i % 5 == 0:
                     print('[%d/%d][%d/%d]\tLoss_D: %.4f\tLoss_G: %.4f\tD(x): %.4f\tD(G(z)): %.4f / %.4f'
-                        % (epoch, num_epochs, i, len(dataloader),
+                        % (epoch, epochs, i, len(dataloader),
                             errD.item(), errG.item(), D_x, D_G_z1, D_G_z2))
 
                 # Save Losses for plotting later
@@ -205,10 +209,14 @@ class GAN:
                 D_losses.append(errD.item())
 
                 # Check how the generator is doing by saving G's output on fixed_noise
-                if (iters % 500 == 0) or ((epoch == num_epochs-1) and (i == len(dataloader)-1)):
+                if (iters % 500 == 0) or ((epoch == epochs-1) and (i == len(dataloader)-1)):
                     with torch.no_grad():
-                        fake = netG(fixed_noise).detach().cpu()
-                    img_list.append(torchvision.utils.make_grid(fake, padding=2, normalize=True))
+                        fake = self.G(fixed_noise).detach().cpu()
+                    imgs = torchvision.utils.make_grid(fake, padding=2, normalize=True)
+                    img_list.append(imgs)
+                    # SAVE IMGS
+                    imgs = torchvision.transforms.ToPILImage()(imgs)
+                    imgs.save('imgs.jpeg', 'JPEG')
 
                 iters += 1
 
@@ -231,6 +239,13 @@ if __name__ == '__main__':
 
     gan = GAN()
     gan.fit()
+
+    # fig = plt.figure(figsize=(8,8))
+    # plt.axis("off")
+    # ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
+    # ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
+
+    # HTML(ani.to_jshtml())
 
 # %%
 
