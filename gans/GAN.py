@@ -144,47 +144,36 @@ class GAN:
         iters = 0
 
         print("Starting Training Loop...")
-        # For each epoch
-        for epoch in range(epochs):
-            # For each batch in the dataloader
-            for i, data in enumerate(dataloader, 0):
+        for epoch in range(epochs): # For each epoch
+            for i, data in enumerate(dataloader, 0): # For each batch in the dataloader
 
                 ############################
                 # (1) Update D network: maximize log(D(x)) + log(1 - D(G(z)))
                 ###########################
                 ## Train with all-real batch
                 self.D.zero_grad()
-                # Format batch
-                real_cpu = data[0].to(device)
+                real_cpu = data[0].to(device) # Format batch
                 b_size = real_cpu.size(0)
                 label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
                 label += (torch.rand_like(label) * label_noise) - (label_noise / 2) # GANHACK #6 soft & noisy labels
-                # Forward pass real batch through D
-                output = self.D(real_cpu).view(-1) # GANHACK #4
-                # Calculate loss on all-real batch
-                errD_real = criterion(output, label)
-                # Calculate gradients for D in backward pass
-                errD_real.backward()
+                output = self.D(real_cpu).view(-1) # Forward pass real batch through D # GANHACK #4
+                errD_real = criterion(output, label) # Calculate loss on all-real batch
+                errD_real.backward() # Calculate gradients for D in backward pass
                 D_x = output.mean().item()
 
                 ## Train with all-fake batch
-                # Generate batch of latent vectors
-                noise = torch.randn(b_size, nz, 1, 1, device=device)
-                # Generate fake image batch with G
-                fake = self.G(noise)
+                noise = torch.randn(b_size, nz, 1, 1, device=device) # Generate batch of latent vectors
+                fake = self.G(noise) # Generate fake image batch with G
                 label.fill_(fake_label)
                 label += (torch.rand_like(label) * label_noise) - (label_noise / 2) # GANHACK #6 soft & noisy labels
-                # Classify all fake batch with D
-                output = self.D(fake.detach()).view(-1) # GANHACK #4
-                # Calculate D's loss on the all-fake batch
-                errD_fake = criterion(output, label) # GANHACK #2
-                # Calculate the gradients for this batch
-                errD_fake.backward()
+                
+                output = self.D(fake.detach()).view(-1) # Classify all fake batch with D # GANHACK #4 = different discriminator loss
+                errD_fake = criterion(output, label) # Calculate D's loss on the all-fake batch # GANHACK #2
+                errD_fake.backward() # Calculate the gradients for this batch
                 D_G_z1 = output.mean().item()
-                # Add the gradients from the all-real and all-fake batches
-                errD = errD_real + errD_fake
-                # Update D
-                torch.optimizerD.step()
+                
+                errD = errD_real + errD_fake # Add the gradients from the all-real and all-fake batches
+                torch.optimizerD.step() # Update D
 
                 ############################
                 # (2) Update G network: maximize log(D(G(z)))
