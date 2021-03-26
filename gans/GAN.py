@@ -121,7 +121,7 @@ class GAN:
         fake = self.G(noise)
         return fake
 
-    def fit(self, epochs=10):
+    def fit(self, epochs=100):
         # Initialize BCELoss function
         criterion = nn.BCELoss()
 
@@ -215,10 +215,14 @@ class GAN:
                     imgs = torchvision.utils.make_grid(fake, padding=2, normalize=True)
                     img_list.append(imgs)
                     # SAVE IMGS
+                    print('saving fake imgs')
+                    if not os.path.exists('fake_imgs'):
+                        os.mkdir('fake_imgs')
                     imgs = torchvision.transforms.ToPILImage()(imgs)
-                    imgs.save('imgs.jpeg', 'JPEG')
+                    imgs.save(f'fake_imgs/step-{iters}.jpeg', 'JPEG')
 
                 iters += 1
+
 
 if __name__ == '__main__':
     dataset = ImageDataset('../../Furniture-StyleGAN/images', download=False)
