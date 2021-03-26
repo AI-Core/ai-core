@@ -174,7 +174,7 @@ class GAN:
                 # Classify all fake batch with D
                 output = self.D(fake.detach()).view(-1)
                 # Calculate D's loss on the all-fake batch
-                errD_fake = criterion(output, label)
+                errD_fake = criterion(output, label) # GANHACK #2
                 # Calculate the gradients for this batch
                 errD_fake.backward()
                 D_G_z1 = output.mean().item()
