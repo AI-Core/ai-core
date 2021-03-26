@@ -50,7 +50,7 @@ class Generator(nn.Module):
             nn.ReLU(True),
             # state size. (ngf) x 32 x 32
             nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
-            nn.Tanh()
+            nn.Tanh() # GANHACK #1
             # state size. (nc) x 64 x 64
         )
 
@@ -132,6 +132,7 @@ class GAN:
         # Establish convention for real and fake labels during training
         real_label = 1.
         fake_label = 0.
+        label_noise = 0.3
 
         # Setup Adam torch.optimizers for both G and D
         torch.optimizerD = torch.optim.Adam(self.D.parameters(), lr=lr, betas=(beta1, 0.999))
@@ -157,6 +158,7 @@ class GAN:
                 real_cpu = data[0].to(device)
                 b_size = real_cpu.size(0)
                 label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
+                label += (torch.rand_like(label) * label_noise) - (label_noise / 2) # GANHACK #6 soft & noisy labels
                 # Forward pass real batch through D
                 output = self.D(real_cpu).view(-1) # GANHACK #4
                 # Calculate loss on all-real batch
@@ -171,6 +173,7 @@ class GAN:
                 # Generate fake image batch with G
                 fake = self.G(noise)
                 label.fill_(fake_label)
+                label += (torch.rand_like(label) * label_noise) - (label_noise / 2) # GANHACK #6 soft & noisy labels
                 # Classify all fake batch with D
                 output = self.D(fake.detach()).view(-1) # GANHACK #4
                 # Calculate D's loss on the all-fake batch
