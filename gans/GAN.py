@@ -158,7 +158,7 @@ class GAN:
                 b_size = real_cpu.size(0)
                 label = torch.full((b_size,), real_label, dtype=torch.float, device=device)
                 # Forward pass real batch through D
-                output = self.D(real_cpu).view(-1)
+                output = self.D(real_cpu).view(-1) # GANHACK #4
                 # Calculate loss on all-real batch
                 errD_real = criterion(output, label)
                 # Calculate gradients for D in backward pass
@@ -172,7 +172,7 @@ class GAN:
                 fake = self.G(noise)
                 label.fill_(fake_label)
                 # Classify all fake batch with D
-                output = self.D(fake.detach()).view(-1)
+                output = self.D(fake.detach()).view(-1) # GANHACK #4
                 # Calculate D's loss on the all-fake batch
                 errD_fake = criterion(output, label) # GANHACK #2
                 # Calculate the gradients for this batch
