@@ -89,7 +89,7 @@ class Furniture(torch.utils.data.Dataset):
     
     def download(self, root):
 
-        with open('DATA/data.json') as f:
+        with open('./furniture_data.json') as f:
             data = json.load(f) # read data containing image paths
 
         paths = ('/'.join(path.split('/')[1:]) for category in data.values() for item in category.values() for path in item['images']) # generate paths
