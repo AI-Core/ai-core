@@ -8,7 +8,7 @@ setup(
     author='Harry Berg',
     author_email='harry@theaicore.com',
     license='MIT',
-    packages=['ai_core', 'datasets'],
+    packages=['ai_core', 'ai_core.datasets'],
     install_requires=['torch', 'torchvision'],
     keywords = ['AI', 'ML'], 
     classifiers=[
