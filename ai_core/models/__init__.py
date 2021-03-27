@@ -1,1 +1,1 @@
-from gans import GAN
+from .gans import gan
