@@ -1,2 +1,6 @@
 *__pycache__
 *MNIST
+token
+build
+dist
+ai_core.egg-info
