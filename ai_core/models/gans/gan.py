@@ -13,6 +13,9 @@ beta1 = 0.5 # Beta1 hyperparam for Adam torch.optimizers
 # Number of GPUs available. Use 0 for CPU mode.
 ngpu = 8
 
+# Decide which device we want to run on
+device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
+
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -219,9 +222,6 @@ if __name__ == '__main__':
     # Number of workers for dataloader
     workers = 2
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=workers)
-
-    # Decide which device we want to run on
-    device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
 
     # Plot some training images
     real_batch = next(iter(dataloader))
