@@ -1,13 +1,7 @@
 #%%
-import sys
-sys.path.append('../../Furniture-StyleGAN')
-from ImageDataset import ImageDataset
 import torch
-import matplotlib.pyplot as plt
-import numpy as np
 from torch import nn
 import torchvision
-from time import sleep
 
 batch_size = 32
 nc = 3 # Number of channels in the training images. For color images this is 3
@@ -115,8 +109,8 @@ class GAN:
         print(self.D)
 
 
-    def sample(self):
-        noise = torch.randn(b_size, nz, 1, 1, device=device)
+    def sample(self, n_examples=64):
+        noise = torch.randn(n_examples, nz, 1, 1, device=device)
         # Generate fake image batch with G
         fake = self.G(noise)
         return fake
@@ -217,7 +211,10 @@ class GAN:
 
 
 if __name__ == '__main__':
-    dataset = ImageDataset('../../Furniture-StyleGAN/images', download=False)
+    from ai_core.datasets import Furniture
+    import numpy as np
+    import matplotlib.pyplot as plt
+    dataset = Furniture('../../Furniture-StyleGAN/images', download=False)
     print(len(dataset))
     # Number of workers for dataloader
     workers = 2
@@ -243,14 +240,13 @@ if __name__ == '__main__':
 
     # HTML(ani.to_jshtml())
 
-# %%
-
-plt.figure(figsize=(10,5))
-plt.title("Generator and Discriminator Loss During Training")
-plt.plot(G_losses,label="G")
-plt.plot(D_losses,label="D")
-plt.xlabel("iterations")
-plt.ylabel("Loss")
-plt.legend()
-plt.show()
-# %%
+    # %%
+    plt.figure(figsize=(10,5))
+    plt.title("Generator and Discriminator Loss During Training")
+    plt.plot(G_losses,label="G")
+    plt.plot(D_losses,label="D")
+    plt.xlabel("iterations")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
+    # %%
