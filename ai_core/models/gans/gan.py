@@ -2,6 +2,7 @@
 import torch
 from torch import nn
 import torchvision
+import os
 
 batch_size = 32
 nc = 3 # Number of channels in the training images. For color images this is 3

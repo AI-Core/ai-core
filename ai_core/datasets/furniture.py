@@ -43,7 +43,7 @@ class Furniture(torch.utils.data.Dataset):
         Dictionary to translate the label to a 
         numeric value
     '''
-    def __init__(self, root_dir, transform=True, download=True):
+    def __init__(self, root_dir, transform=True, download=False):
         
         self.root_dir = root_dir
         if download:
