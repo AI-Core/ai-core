@@ -1,4 +1,4 @@
-{
+furniture_data = {
     "plant pots": {
         "0": {
             "id": 0,

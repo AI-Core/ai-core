@@ -9,6 +9,7 @@ import json
 import requests
 from pathlib import Path
 from tqdm import tqdm
+from .furniture_data import furniture_data as furniture_json_data
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -89,8 +90,10 @@ class Furniture(torch.utils.data.Dataset):
     
     def download(self, root):
 
-        with open('./furniture_data.json') as f:
-            data = json.load(f) # read data containing image paths
+        # with open('./furniture_data.json') as f:
+        #     data = json.load(f) # read data containing image paths
+
+        data = furniture_json_data
 
         paths = ('/'.join(path.split('/')[1:]) for category in data.values() for item in category.values() for path in item['images']) # generate paths
 
