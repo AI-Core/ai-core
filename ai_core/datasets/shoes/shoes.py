@@ -33,6 +33,10 @@ for file in shoe_files:
         if len(id.split('.')) == 1: # if no file extension in image id
             id += '.jpg' # guess and add .jpg
 
+        if '.tif' in id:
+            print('skipping .tif file')
+            continue
+
         print(id)
         local_dest = f'{brand_dir}/{id}'
         try:
