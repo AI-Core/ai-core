@@ -2,7 +2,7 @@ import torch
 import requests
 import os
 import json
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 def download_file(src_url, local_destination):
     response = requests.get(src_url)
@@ -21,12 +21,13 @@ for file in shoe_files:
     # print(shoes)
     for url in shoes:
         print(url)
-        id = url.split('/')[-1].strip('\n')
-        print(id)
 
         brand_dir = f'{img_dir}/{file.split(".")[0]}'
         if not os.path.exists(brand_dir):
             os.mkdir(brand_dir)
+
+        id = url.split('/')[-1].strip('\n').split('?')[0]
+        print(id)
         local_dest = f'{brand_dir}/{id}'
         try:
             download_file(url, local_dest)
@@ -36,8 +37,7 @@ for file in shoe_files:
         try:
             Image.open(local_dest).close() # open and close to check it works
             print('image opened')
-
-        except:
+        except UnidentifiedImageError:
             print('img wasnt opened')
             os.remove(local_dest)
             continue
