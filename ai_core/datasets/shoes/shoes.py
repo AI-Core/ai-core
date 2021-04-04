@@ -26,7 +26,13 @@ for file in shoe_files:
         if not os.path.exists(brand_dir):
             os.mkdir(brand_dir)
 
-        id = url.split('/')[-1].strip('\n').split('?')[0]
+        id = url.split('/')[-1] # get filename
+        id = id.strip('\n') # strip trailing newlines
+        id = id.split('?')[0] # remove trailing query string params
+        id = id.split('&')[0] # remove trailing query string params
+        if len(id.split('.')) == 1: # if no file extension in image id
+            id += '.jpg' # guess and add .jpg
+
         print(id)
         local_dest = f'{brand_dir}/{id}'
         try:
