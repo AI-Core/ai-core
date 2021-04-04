@@ -4,5 +4,5 @@ token
 build
 dist
 ai_core.egg-info
-images
+*/images
 fake_imgs
