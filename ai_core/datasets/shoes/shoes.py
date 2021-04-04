@@ -18,13 +18,21 @@ for file in shoe_files:
     print(file)
     with open(f'shoes_urls/{file}') as f:
         shoes = f.readlines()
-    print(shoes)
+    # print(shoes)
     for url in shoes:
         print(url)
         id = url.split('/')[-1].strip('\n')
         print(id)
-        local_dest = f'{img_dir}/{id}'
-        download_file(url, local_dest)
+
+        brand_dir = f'{img_dir}/{file.split(".")[0]}'
+        if not os.path.exists(brand_dir):
+            os.mkdir(brand_dir)
+        local_dest = f'{brand_dir}/{id}'
+        try:
+            download_file(url, local_dest)
+        except:
+            print('failed to get url')
+            continue
         try:
             Image.open(local_dest).close() # open and close to check it works
             print('image opened')
@@ -32,6 +40,7 @@ for file in shoe_files:
         except:
             print('img wasnt opened')
             os.remove(local_dest)
+            continue
         print()
         # sdfvsd
 scds
