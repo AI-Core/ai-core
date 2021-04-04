@@ -45,7 +45,7 @@ for file in shoe_files:
         local_dest = f'{brand_dir}/{id}'
         try:
             download_file(url, local_dest)
-        except:
+        except requests.exceptions.ConnectionError:
             print('failed to get url')
             continue
         try:
