@@ -9,6 +9,15 @@ def download_file(src_url, local_destination):
     with open(local_destination, 'wb+') as f:
         f.write(response.content)
 
+def create_id_from_url(url):
+    id = url.split('/')[-1] # get filename
+    id = id.strip('\n') # strip trailing newlines
+    id = id.split('?')[0] # remove trailing query string params
+    id = id.split('&')[0] # remove trailing query string params
+    if len(id.split('.')) == 1: # if no file extension in image id
+        id += '.jpg' # guess and add .jpg
+    return id
+
 img_dir = 'images'
 if not os.path.exists(img_dir):
     os.mkdir(img_dir)
@@ -26,12 +35,7 @@ for file in shoe_files:
         if not os.path.exists(brand_dir):
             os.mkdir(brand_dir)
 
-        id = url.split('/')[-1] # get filename
-        id = id.strip('\n') # strip trailing newlines
-        id = id.split('?')[0] # remove trailing query string params
-        id = id.split('&')[0] # remove trailing query string params
-        if len(id.split('.')) == 1: # if no file extension in image id
-            id += '.jpg' # guess and add .jpg
+        id = create_id_from_url(url)
 
         if '.tif' in id:
             print('skipping .tif file')
