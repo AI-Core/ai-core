@@ -9,7 +9,7 @@ def download_file(src_url, local_destination):
     with open(local_destination, 'wb+') as f:
         f.write(response.content)
 
-img_dir = 'shoes_imgs'
+img_dir = 'images'
 if not os.path.exists(img_dir):
     os.mkdir(img_dir)
 
