@@ -11,6 +11,7 @@ setup(
     packages=[
         'ai_core', 
         'ai_core.datasets', 
+        'ai_core.datasets.shoes', 
         'ai_core.models', 
         'ai_core.models.gans'
     ],
