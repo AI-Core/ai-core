@@ -25,14 +25,16 @@ class Shoes():
 
     def __getitem__(self, idx):
         fp = self.img_fps[idx]
+        label = fp.split('/')[1]
         img = Image.open(fp)
         if self.transform:
             img = self.transform(img)
-        return img
+        return img, label
 
 if __name__ == '__main__':
     import random
     shoes = Shoes(download=False)
     print(len(shoes))
-    # img = shoes[random.randint(0, len(shoes))]
+    # img, label = shoes[random.randint(0, len(shoes))]
     # img.show()
+    # print(label)
