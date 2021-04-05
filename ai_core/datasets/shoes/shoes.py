@@ -5,7 +5,7 @@ from PIL import Image
 import shutil
 
 class Shoes():
-    def __init__(self, root_dir='new_images', download=False, transform=None):
+    def __init__(self, root_dir='images', download=False, transform=None):
         self.transform = transform
         if download:
             # TODO dont download if it already exists
@@ -15,7 +15,10 @@ class Shoes():
                 f.write(response.content) # write data to zip file
             shutil.unpack_archive(zip_dir, root_dir) # unzip into root_dir
             os.remove(zip_dir)# remove zip file
-        self.img_fps = [f'{root_dir}/{brand_dir}/{filename}' for brand_dir in os.listdir(root_dir) for filename in os.listdir(f'{root_dir}/{brand_dir}')] # generate image filepaths
+        try:
+            self.img_fps = [f'{root_dir}/{brand_dir}/{filename}' for brand_dir in os.listdir(root_dir) for filename in os.listdir(f'{root_dir}/{brand_dir}')] # generate image filepaths
+        except FileNotFoundError:
+            raise FileNotFoundError('You need to download the dataset by using download=True')
 
     def __len__(self):
         return len(self.img_fps)
@@ -29,7 +32,7 @@ class Shoes():
 
 if __name__ == '__main__':
     import random
-    shoes = Shoes(download=True)
+    shoes = Shoes(download=False)
     print(len(shoes))
     # img = shoes[random.randint(0, len(shoes))]
     # img.show()
