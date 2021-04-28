@@ -6,3 +6,6 @@ dist
 ai_core.egg-info
 */images
 fake_imgs
+DATA/
+images/
+.vscode/
